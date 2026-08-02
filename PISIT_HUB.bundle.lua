@@ -1,4 +1,4 @@
-[[
+--[[
 	PISIT HUB | Single-File Bundle (Updated with All Rayfield-style Components)
 	--------------------------------------------------------------------
 	Auto-generated bundle for loadstring/HttpGet distribution.
@@ -1023,7 +1023,7 @@ function Window.new(config)
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	self.ScreenGui = Utility.New("ScreenGui", { Name = "PISIT_HUB", ResetOnSpawn = false, Parent = playerGui })
 
-	self.Main = Utility.New("Frame", { Name = "Main", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(400, 320), BackgroundColor3 = Theme.Get("Background"), ClipsDescendants = true, Parent = self.ScreenGui })
+	self.Main = Utility.New("Frame", { Name = "Main", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(380, 300), BackgroundColor3 = Theme.Get("Background"), ClipsDescendants = true, Parent = self.ScreenGui })
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 12), Parent = self.Main })
 	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1.5, Transparency = 0.2, Parent = self.Main })
 
