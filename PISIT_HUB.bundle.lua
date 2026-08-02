@@ -539,7 +539,7 @@ function Window:_buildTopBar(titleText)
 	closeBtn.MouseButton1Click:Connect(function() self.ScreenGui:Destroy() end)
 
 	-- ปุ่มย่อหน้าต่าง (-) อยู่ทางซ้ายของปุ่มปิดทันที ไม่ทับซ้อน
-	local minBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -28, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "-", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
+	local minBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -56, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "-", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 5), Parent = minBtn })
 	minBtn.MouseButton1Click:Connect(function()
 		self.Minimized = not self.Minimized
