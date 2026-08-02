@@ -1,8 +1,9 @@
+```lua
 --[[
-	PISIT HUB | Complete Single-File Bundle (Rayfield Style)
+	PISIT HUB | Complete Single-File Bundle (Rayfield Style with Toggle Pill)
 	--------------------------------------------------------------------
 	Includes: Window, Tabs, Sections, Buttons, Toggles, Sliders, Dropdowns,
-	Textbox, Paragraph, Label, Keybind, ColorPicker, Minimize/Close Controls,
+	Textbox, Paragraph, Label, Keybind, ColorPicker, Minimize (with floating toggle button),
 	and Mobile-optimized 400x320 default window sizing.
 --]]
 
@@ -222,7 +223,7 @@ function Toggle.new(parent, config)
 		BackgroundColor3 = Theme.Get("Background"), Parent = self.Instance
 	})
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = box })
-	local stroke = Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.4, Thickness = 1, Parent = box })
+	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.4, Thickness = 1, Parent = box })
 
 	local function render(anim)
 		local col = self.Value and Theme.Get("Accent") or Theme.Get("Background")
@@ -283,7 +284,7 @@ function Slider.new(parent, config)
 		Utility.SafeCall(config.Callback, self.Value)
 	end
 
-bar.InputBegan:Connect(function(input)
+	bar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			self.Dragging = true
 			update(input.Position.X)
@@ -359,6 +360,72 @@ function Dropdown.new(parent, config)
 	return self
 end
 return Dropdown
+end)()
+
+Modules.ColorPicker = (function()
+local UserInputService = game:GetService("UserInputService")
+local Theme = Modules.Theme
+local Utility = Modules.Utility
+local ColorPicker = {}
+ColorPicker.__index = ColorPicker
+
+function ColorPicker.new(parent, config)
+	config = config or {}
+	local self = setmetatable({}, ColorPicker)
+	self.Value = config.Default or Color3.fromRGB(220, 30, 30)
+
+	self.Instance = Utility.New("Frame", {
+		Name = "ColorPicker", BackgroundColor3 = Theme.Get("ElementBackground"),
+		Size = UDim2.new(1, 0, 0, 100), Parent = parent
+	})
+	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
+	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
+	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 6), Parent = self.Instance })
+
+	local header = Utility.New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Parent = self.Instance })
+	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -30, 1, 0), Text = config.Title or "Color Picker", Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = header })
+	local preview = Utility.New("Frame", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(20, 20), BackgroundColor3 = self.Value, Parent = header })
+	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = preview })
+	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1, Parent = preview })
+
+	local r, g, b = math.floor(self.Value.R * 255), math.floor(self.Value.G * 255), math.floor(self.Value.B * 255)
+
+	local function makeSlider(name, val, col)
+		local row = Utility.New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Parent = self.Instance })
+		Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.fromOffset(15, 20), Text = name, Font = Enum.Font.GothamBold, TextSize = 11, TextColor3 = col, Parent = row })
+		local bar = Utility.New("Frame", { Position = UDim2.new(0, 18, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Size = UDim2.new(1, -18, 0, 4), BackgroundColor3 = Theme.Get("AccentDim"), Parent = row })
+		Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
+		local fill = Utility.New("Frame", { Size = UDim2.new(val/255, 0, 1, 0), BackgroundColor3 = col, Parent = bar })
+		Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fill })
+
+		local dragging = false
+		bar.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end
+		end)
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				local rel = Utility.Clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+				fill.Size = UDim2.new(rel, 0, 1, 0)
+				if name == "R" then r = math.floor(rel * 255 + 0.5)
+				elseif name == "G" then g = math.floor(rel * 255 + 0.5)
+				elseif name == "B" then b = math.floor(rel * 255 + 0.5) end
+				self.Value = Color3.fromRGB(r, g, b)
+				preview.BackgroundColor3 = self.Value
+				Utility.SafeCall(config.Callback, self.Value)
+			end
+		end)
+	end
+
+	makeSlider("R", r, Color3.fromRGB(255, 80, 80))
+	makeSlider("G", g, Color3.fromRGB(80, 255, 100))
+	makeSlider("B", b, Color3.fromRGB(80, 150, 255))
+
+	return self
+end
+return ColorPicker
 end)()
 
 Modules.Textbox = (function()
@@ -452,6 +519,7 @@ function Section:CreateDropdown(cfg) return Modules.Dropdown.new(self.Content, c
 function Section:CreateTextbox(cfg) return Modules.Textbox.new(self.Content, cfg) end
 function Section:CreateParagraph(cfg) return Modules.Paragraph.new(self.Content, cfg) end
 function Section:CreateLabel(cfg) return Modules.Label.new(self.Content, cfg) end
+function Section:CreateColorPicker(cfg) return Modules.ColorPicker.new(self.Content, cfg) end
 return Section
 end)()
 
@@ -514,14 +582,15 @@ function Window.new(config)
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	self.ScreenGui = Utility.New("ScreenGui", { Name = "PISIT_HUB", ResetOnSpawn = false, Parent = playerGui })
 
-	-- ปรับขนาดเริ่มต้นเป็น 400x320 เหมาะกับมือถือ ไม่กว้างแบน
 	self.Main = Utility.New("Frame", { Name = "Main", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(400, 320), BackgroundColor3 = Theme.Get("Background"), ClipsDescendants = true, Parent = self.ScreenGui })
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 10), Parent = self.Main })
 	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1.2, Transparency = 0.2, Parent = self.Main })
 
 	self:_buildTopBar(config.Title or "PISIT HUB")
 	self:_buildBody()
+	self:_buildTogglePill()
 	Utility.MakeDraggable(self.Main, self.TopBar)
+	Utility.MakeDraggable(self.TogglePill)
 	Animation.OpenWindow(self.Main)
 	return self
 end
@@ -533,21 +602,19 @@ function Window:_buildTopBar(titleText)
 
 	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -65, 1, 0), Text = titleText, Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Accent"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.TopBar })
 
-	-- ปุ่มปิด (X) ชิดขวาสุด
+	-- ปุ่มปิด (X)
 	local closeBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "x", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 5), Parent = closeBtn })
 	closeBtn.MouseButton1Click:Connect(function() self.ScreenGui:Destroy() end)
 
-	-- ปุ่มย่อหน้าต่าง (-) อยู่ทางซ้ายของปุ่มปิดทันที ไม่ทับซ้อน
-	local minBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -56, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "-", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
+	-- ปุ่มย่อหน้าต่าง (-) เว้นระยะ -50 ตามที่มึงชอบ
+	local minBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -50, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "-", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 5), Parent = minBtn })
 	minBtn.MouseButton1Click:Connect(function()
-		self.Minimized = not self.Minimized
-		if self.Minimized then
-			Animation.CloseWindow(self.Main)
-		else
-			Animation.OpenWindow(self.Main)
-		end
+		self.Minimized = true
+		Animation.CloseWindow(self.Main, function()
+			self.TogglePill.Visible = true
+		end)
 	end)
 end
 
@@ -558,6 +625,23 @@ function Window:_buildBody()
 	Utility.New("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 3), Parent = self.Sidebar })
 
 	self.PageContainer = Utility.New("Frame", { Name = "PageContainer", Position = UDim2.new(0, 110, 0, 0), Size = UDim2.new(1, -110, 1, 0), BackgroundTransparency = 1, Parent = self.Body })
+end
+
+function Window:_buildTogglePill()
+	-- ปุ่มโลโก้ลอยสำหรับเปิด UI คืนเมื่อถูกย่อ
+	self.TogglePill = Utility.New("TextButton", {
+		Name = "TogglePill", Text = "P", Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Theme.Get("Accent"),
+		AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 20, 0.3, 0), Size = UDim2.fromOffset(40, 40),
+		BackgroundColor3 = Theme.Get("SecondaryBackground"), AutoButtonColor = false, Visible = false, Parent = self.ScreenGui
+	})
+	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = self.TogglePill })
+	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1.5, Parent = self.TogglePill })
+
+	self.TogglePill.MouseButton1Click:Connect(function()
+		self.Minimized = false
+		self.TogglePill.Visible = false
+		Animation.OpenWindow(self.Main)
+	end)
 end
 
 function Window:CreateTab(config)
@@ -577,6 +661,6 @@ return Window
 end)()
 
 local Library = {}
-Library._version = "2.0.0"
+Library._version = "2.1.0"
 function Library:CreateWindow(config) return Modules.Window.new(config) end
 return Library
