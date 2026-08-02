@@ -73,27 +73,34 @@ TitleBar.Parent = MainFrame
 
 -- Title (ค่าย PISIT x ผลักกระเด็น)
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -40, 1, 0)
+Title.Size = UDim2.new(1, -95, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "ค่าย PISIT x ผลักกระเด็น"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
+Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
--- Close Button (Pure X Style, No Square Box)
+-- Container for Top Buttons (-, X, Logo) to align properly
+local TopButtonsHolder = Instance.new("Frame")
+TopButtonsHolder.Size = UDim2.new(0, 85, 1, 0)
+TopButtonsHolder.Position = UDim2.new(1, -90, 0, 0)
+TopButtonsHolder.BackgroundTransparency = 1
+TopButtonsHolder.Parent = TitleBar
+
+-- Close Button (X)
 local CloseButton = Instance.new("TextButton")
-CloseButton.Position = UDim2.new(1, -34, 0.5, -12)
+CloseButton.Position = UDim2.new(1, -24, 0.5, -12)
 CloseButton.Size = UDim2.new(0, 24, 0, 24)
 CloseButton.BackgroundTransparency = 1
 CloseButton.BorderSizePixel = 0
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(255, 120, 120)
 CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextSize = 16
-CloseButton.Parent = TitleBar
+CloseButton.TextSize = 15
+CloseButton.Parent = TopButtonsHolder
 
 CloseButton.MouseEnter:Connect(function()
     CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -102,9 +109,43 @@ CloseButton.MouseLeave:Connect(function()
     CloseButton.TextColor3 = Color3.fromRGB(255, 120, 120)
 end)
 
+-- Minimize Button (-)
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Position = UDim2.new(1, -50, 0.5, -12)
+MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.TextSize = 18
+MinimizeButton.Parent = TopButtonsHolder
+
+MinimizeButton.MouseEnter:Connect(function()
+    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+end)
+MinimizeButton.MouseLeave:Connect(function()
+    MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
+
+-- Toggle Function Square Image Button (Logo from user link)
+local LogoButton = Instance.new("ImageButton")
+LogoButton.Position = UDim2.new(1, -78, 0.5, -10)
+LogoButton.Size = UDim2.new(0, 20, 0, 20)
+LogoButton.BackgroundTransparency = 1
+LogoButton.Image = "https://i.postimg.cc/hP39YjVY/logo.png"
+LogoButton.Parent = TopButtonsHolder
+
+-- Content Holder to hide/show when minimized
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Size = UDim2.new(1, 0, 1, -35)
+ContentContainer.Position = UDim2.new(0, 0, 0, 35)
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Parent = MainFrame
+
 -- Status Label
 local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Position = UDim2.new(0, 15, 0, 42)
+StatusLabel.Position = UDim2.new(0, 15, 0, 7)
 StatusLabel.Size = UDim2.new(1, -30, 0, 22)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Text = "Select targets to fling"
@@ -112,16 +153,16 @@ StatusLabel.TextColor3 = Color3.fromRGB(240, 200, 200)
 StatusLabel.Font = Enum.Font.GothamSemibold
 StatusLabel.TextSize = 13
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.Parent = MainFrame
+StatusLabel.Parent = ContentContainer
 
 -- Player Selection Frame
 local SelectionFrame = Instance.new("Frame")
-SelectionFrame.Position = UDim2.new(0, 15, 0, 70)
+SelectionFrame.Position = UDim2.new(0, 15, 0, 35)
 SelectionFrame.Size = UDim2.new(1, -30, 0, 200)
 SelectionFrame.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
 SelectionFrame.BackgroundTransparency = 0.5
 SelectionFrame.BorderSizePixel = 0
-SelectionFrame.Parent = MainFrame
+SelectionFrame.Parent = ContentContainer
 
 local SelectionCorner = Instance.new("UICorner")
 SelectionCorner.CornerRadius = UDim.new(0, 8)
@@ -144,7 +185,7 @@ PlayerScrollFrame.Parent = SelectionFrame
 
 -- Start Fling Button (เริ่มผลัก)
 local StartButton = Instance.new("TextButton")
-StartButton.Position = UDim2.new(0, 15, 0, 282)
+StartButton.Position = UDim2.new(0, 15, 0, 247)
 StartButton.Size = UDim2.new(0.5, -20, 0, 45)
 StartButton.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
 StartButton.BorderSizePixel = 0
@@ -152,7 +193,7 @@ StartButton.Text = "เริ่มผลัก"
 StartButton.TextColor3 = Color3.fromRGB(180, 20, 20)
 StartButton.Font = Enum.Font.GothamBold
 StartButton.TextSize = 15
-StartButton.Parent = MainFrame
+StartButton.Parent = ContentContainer
 
 local StartCorner = Instance.new("UICorner")
 StartCorner.CornerRadius = UDim.new(0, 8)
@@ -160,7 +201,7 @@ StartCorner.Parent = StartButton
 
 -- Stop Fling Button (หยุดผลัก)
 local StopButton = Instance.new("TextButton")
-StopButton.Position = UDim2.new(0.5, 5, 0, 282)
+StopButton.Position = UDim2.new(0.5, 5, 0, 247)
 StopButton.Size = UDim2.new(0.5, -20, 0, 45)
 StopButton.BackgroundColor3 = Color3.fromRGB(150, 15, 15)
 StopButton.BorderSizePixel = 0
@@ -168,7 +209,7 @@ StopButton.Text = "หยุดผลัก"
 StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 StopButton.Font = Enum.Font.GothamBold
 StopButton.TextSize = 15
-StopButton.Parent = MainFrame
+StopButton.Parent = ContentContainer
 
 local StopCorner = Instance.new("UICorner")
 StopCorner.CornerRadius = UDim.new(0, 8)
@@ -178,7 +219,7 @@ StopCorner.Parent = StopButton
 local SelectedTargets = {}
 local PlayerCheckboxes = {}
 local FlingActive = false
-local FlingConnection = nil
+local IsMinimized = false
 getgenv().OldPos = nil
 getgenv().FPDH = workspace.FallenPartsDestroyHeight
 
@@ -255,7 +296,6 @@ local function RefreshPlayerList()
                     Checkmark.Visible = true
                 end
                 
-                -- Update status display logic inline or via UpdateStatus
                 local count = 0
                 for _ in pairs(SelectedTargets) do count = count + 1 end
                 if FlingActive then
@@ -275,8 +315,7 @@ local function RefreshPlayerList()
             yPosition = yPosition + 37
         end
     end
-    
-    PlayerScrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPosition + 5)
+PlayerScrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPosition + 5)
 end
 
 local function CountSelectedTargets()
@@ -487,6 +526,20 @@ local function StopFling()
     Message("Stopped", "Fling has been stopped", 2)
 end
 
+-- Toggle Minimize / Maximize Function
+local function ToggleMinimize()
+    IsMinimized = not IsMinimized
+    if IsMinimized then
+        MainFrame.Size = UDim2.new(0, 320, 0, 35)
+        ContentContainer.Visible = false
+        MinimizeButton.Text = "+"
+    else
+        MainFrame.Size = UDim2.new(0, 320, 0, 350)
+        ContentContainer.Visible = true
+        MinimizeButton.Text = "-"
+    end
+end
+
 -- Button Visual Feedback & Actions
 StartButton.MouseButton1Down:Connect(function()
     StartButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
@@ -503,6 +556,9 @@ StopButton.MouseButton1Up:Connect(function()
     StopButton.BackgroundColor3 = Color3.fromRGB(150, 15, 15)
 end)
 StopButton.MouseButton1Click:Connect(StopFling)
+
+MinimizeButton.MouseButton1Click:Connect(ToggleMinimize)
+LogoButton.MouseButton1Click:Connect(ToggleMinimize)
 
 CloseButton.MouseButton1Click:Connect(function()
     StopFling()
@@ -524,4 +580,4 @@ RefreshPlayerList()
 UpdateStatus()
 
 -- Success message
-Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!", 3)
+Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!",
