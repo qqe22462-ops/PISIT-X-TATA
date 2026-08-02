@@ -1,910 +1,333 @@
---[[
-	PISIT HUB | Complete Single-File Bundle (Rayfield Style with Toggle Pill)
-	--------------------------------------------------------------------
-	Includes: Window, Tabs, Sections, Buttons, Toggles, Sliders, Dropdowns,
-	Textbox, Paragraph, Label, Keybind, ColorPicker, Minimize (with floating toggle button),
-	and Mobile-optimized 400x320 default window sizing.
---]]
+-- ====================================================================
+-- PISIT HUB | Ultimate Mega Project + Multi-External Script Loaders
+-- ====================================================================
 
-local Modules = {}
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT_HUB.bundle.lua"))()
 
-Modules.Utility = (function()
-local UserInputService = game:GetService("UserInputService")
-local Utility = {}
+-- สร้างหน้าต่างหลักของโปรเจกต์
+local Window = Library:CreateWindow({
+    Title = "PISIT HUB | Ultimate Mega Project"
+})
 
-function Utility.New(className, props, children)
-	local inst = Instance.new(className)
-	if props then
-		for key, value in pairs(props) do
-			if key ~= "Parent" then inst[key] = value end
-		end
-	end
-	if children then
-		for _, child in ipairs(children) do child.Parent = inst end
-	end
-	if props and props.Parent then inst.Parent = props.Parent end
-	return inst
-end
+-- สร้าง Tabs ทั้งหมด
+local HomeTab = Window:CreateTab({ Title = "Home" })
+local PlayerTab = Window:CreateTab({ Title = "Player" })
+local VisualsTab = Window:CreateTab({ Title = "Visuals" })
+local CheatTab = Window:CreateTab({ Title = "ช่วยเล่น" }) -- Tab ช่วยเล่น
+local WorldTab = Window:CreateTab({ Title = "World & Misc" })
 
-function Utility.SafeCall(fn, ...)
-	if type(fn) ~= "function" then return end
-	local ok, err = pcall(fn, ...)
-	if not ok then warn("[PISIT HUB] Error: " .. tostring(err)) end
-end
+-- สร้าง Sections
+local HomeSection = HomeTab:CreateSection({ Title = "Player Information & Status" })
+local StatsSection = HomeTab:CreateSection({ Title = "Quick Stats" })
 
-function Utility.MakeDraggable(frame, handle)
-	handle = handle or frame
-	local dragging, dragStart, startPos
-	handle.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = frame.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
-			end)
-		end
-	end)
-	handle.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - dragStart
-			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
-end
+local MoveSection = PlayerTab:CreateSection({ Title = "Movement & Speed" })
+local ActionSection = PlayerTab:CreateSection({ Title = "Character Utilities" })
 
-function Utility.Round(val, dec)
-	local mult = 10 ^ (dec or 0)
-	return math.floor(val * mult + 0.5) / mult
-end
+local ESPSection = VisualsTab:CreateSection({ Title = "ESP & Wallhack Settings" })
+local ColorSection = VisualsTab:CreateSection({ Title = "Color Customization" })
 
-function Utility.Clamp(val, min, max)
-	return math.max(min, math.min(max, val))
-end
+-- Section สำหรับ Tab ช่วยเล่น (บรรจุสคริปต์เสริมทั้ง 2 ตัว)
+local CheatSection = CheatTab:CreateSection({ Title = "Script Executor Helper" })
 
-return Utility
-end)()
+local PerfSection = WorldTab:CreateSection({ Title = "Performance & HD Boost" })
+local WorldSection = WorldTab:CreateSection({ Title = "World & Lighting" })
 
-Modules.Theme = (function()
-local Theme = {}
-local function newSignal()
-	local signal = { _listeners = {} }
-	function signal:Connect(fn)
-		table.insert(signal._listeners, fn)
-		return { Disconnect = function()
-			for i, l in ipairs(signal._listeners) do if l == fn then table.remove(signal._listeners, i) break end end
-		end }
-	end
-	function signal:Fire(...) for _, fn in ipairs(signal._listeners) do task.spawn(fn, ...) end end
-	return signal
-end
-
-Theme.Palettes = {
-	Red = {
-		Accent = Color3.fromHex("#DC1E1E"),
-		AccentDim = Color3.fromHex("#8C1414"),
-		Background = Color3.fromHex("#0F0F0F"),
-		SecondaryBackground = Color3.fromHex("#171717"),
-		ElementBackground = Color3.fromHex("#1B1B1B"),
-		Border = Color3.fromHex("#DC1E1E"),
-		Text = Color3.fromHex("#FFFFFF"),
-		SubText = Color3.fromHex("#B5B5B5"),
-		Success = Color3.fromHex("#3ED17B"),
-		Warning = Color3.fromHex("#E1B33D"),
-		Error = Color3.fromHex("#E14848"),
-	}
-}
-
-Theme.OnChanged = newSignal()
-Theme.Current = "Red"
-Theme.Active = Theme.Palettes.Red
-
-function Theme.Get(key) return Theme.Active[key] end
-return Theme
-end)()
-
-Modules.Animation = (function()
-local TweenService = game:GetService("TweenService")
-local Animation = {}
-Animation.Easing = {
-	Fast = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-	Normal = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-	Smooth = TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-	Bounce = TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-}
-
-function Animation.Tween(inst, info, props)
-	local tw = TweenService:Create(inst, info, props)
-	tw:Play()
-	return tw
-end
-
-function Animation.OpenWindow(frame)
-	frame.Visible = true
-	local goalSize = frame:GetAttribute("TargetSize") or frame.Size
-	frame.Size = UDim2.new(goalSize.X.Scale, goalSize.X.Offset, 0, 0)
-	frame.BackgroundTransparency = 1
-	Animation.Tween(frame, Animation.Easing.Bounce, { Size = goalSize })
-	Animation.Tween(frame, Animation.Easing.Normal, { BackgroundTransparency = 0 })
-end
-
-function Animation.CloseWindow(frame, onComplete)
-	frame:SetAttribute("TargetSize", frame.Size)
-	local tw = Animation.Tween(frame, Animation.Easing.Fast, { Size = UDim2.new(frame.Size.X.Scale, frame.Size.X.Offset, 0, 0), BackgroundTransparency = 1 })
-	tw.Completed:Connect(function()
-		frame.Visible = false
-		if onComplete then onComplete() end
-	end)
-end
-
-function Animation.Hover(inst, hoverCol, normCol)
-	inst.MouseEnter:Connect(function() Animation.Tween(inst, Animation.Easing.Fast, { BackgroundColor3 = hoverCol }) end)
-	inst.MouseLeave:Connect(function() Animation.Tween(inst, Animation.Easing.Fast, { BackgroundColor3 = normCol }) end)
-end
-
-function Animation.Click(inst)
-	local orig = inst.Size
-	Animation.Tween(inst, TweenInfo.new(0.08), { Size = UDim2.new(orig.X.Scale, orig.X.Offset - 4, orig.Y.Scale, orig.Y.Offset - 2) })
-	task.delay(0.08, function() Animation.Tween(inst, Animation.Easing.Bounce, { Size = orig }) end)
-end
-
-function Animation.Glow(stroke, active)
-	Animation.Tween(stroke, Animation.Easing.Normal, { Transparency = active and 0 or 0.6 })
-end
-
-return Animation
-end)()
-
--- ===== เพิ่มใหม่: ระบบ Save/Load Config =====
-Modules.Config = (function()
-	local HttpService = game:GetService("HttpService")
-	local Config = {}
-	Config._flags = {}
-	Config._folder = "PISIT_HUB/configs"
-	Config._autoSaveEnabled = false
-
-	local function fsAvailable()
-		return typeof(writefile) == "function" and typeof(readfile) == "function" and typeof(isfile) == "function"
-	end
-	local function ensureFolder()
-		if typeof(makefolder) == "function" and typeof(isfolder) == "function" then
-			if not isfolder(Config._folder) then makefolder(Config._folder) end
-		end
-	end
-
-	function Config.Register(flag, getSet) Config._flags[flag] = getSet end
-
-	function Config.Save(name)
-		name = name or "default"
-		if not fsAvailable() then return false, "File IO ใช้ไม่ได้บนแพลตฟอร์มนี้" end
-		ensureFolder()
-		local data = {}
-		for flag, gs in pairs(Config._flags) do
-			local ok, v = pcall(gs.Get)
-			if ok then data[flag] = v end
-		end
-		local ok, encoded = pcall(HttpService.JSONEncode, HttpService, data)
-		if not ok then return false, "เข้ารหัส config ไม่สำเร็จ" end
-		local path = Config._folder .. "/" .. name .. ".json"
-		local writeOk, writeErr = pcall(writefile, path, encoded)
-		if not writeOk then return false, "เขียนไฟล์ไม่สำเร็จ: " .. tostring(writeErr) end
-		return true, "บันทึกที่ " .. path
-	end
-
-	function Config.Load(name)
-		name = name or "default"
-		if not fsAvailable() then return false, "File IO ใช้ไม่ได้บนแพลตฟอร์มนี้" end
-		local path = Config._folder .. "/" .. name .. ".json"
-		if not isfile(path) then return false, "ไม่พบไฟล์ config: " .. path end
-		local ok, raw = pcall(readfile, path)
-		if not ok then return false, "อ่านไฟล์ไม่สำเร็จ" end
-		local decodeOk, data = pcall(HttpService.JSONDecode, HttpService, raw)
-		if not decodeOk then return false, "ถอดรหัส config ไม่สำเร็จ" end
-		for flag, value in pairs(data) do
-			local gs = Config._flags[flag]
-			if gs then pcall(gs.Set, value) end
-		end
-		return true, "โหลดจาก " .. path
-	end
-
-	function Config.EnableAutoSave(name, interval)
-		Config._autoSaveEnabled = true
-		task.spawn(function()
-			while Config._autoSaveEnabled do
-				task.wait(interval or 15)
-				if Config._autoSaveEnabled then Config.Save(name) end
-			end
-		end)
-	end
-	function Config.DisableAutoSave() Config._autoSaveEnabled = false end
-
-	return Config
-end)()
-
--- ===== เพิ่มใหม่: ระบบ Notification มุมขวาบน =====
-Modules.Notification = (function()
-	local Theme = Modules.Theme
-	local Utility = Modules.Utility
-	local Animation = Modules.Animation
-	local Notification = {}
-	local container
-
-	function Notification.Init(screenGui)
-		container = Utility.New("Frame", {
-			Name = "PISIT_Notifications", BackgroundTransparency = 1,
-			AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 12),
-			Size = UDim2.new(0, 220, 1, -24), Parent = screenGui
-		})
-		Utility.New("UIListLayout", {
-			Parent = container, HorizontalAlignment = Enum.HorizontalAlignment.Right,
-			VerticalAlignment = Enum.VerticalAlignment.Top, Padding = UDim.new(0, 6),
-		})
-	end
-
-	function Notification.Notify(data)
-		if not container then return end
-		data = data or {}
-		local card = Utility.New("Frame", {
-			BackgroundColor3 = Theme.Get("SecondaryBackground"), BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = container
-		})
-		Utility.New("UICorner", { CornerRadius = UDim.new(0, 8), Parent = card })
-		local stroke = Utility.New("UIStroke", { Color = Theme.Get("Accent"), Thickness = 1, Transparency = 1, Parent = card })
-		Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = card })
-		Utility.New("UIListLayout", { Padding = UDim.new(0, 2), Parent = card })
-
-		Utility.New("TextLabel", {
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16),
-			Text = data.Title or "แจ้งเตือน", Font = Enum.Font.GothamBold, TextSize = 13,
-			TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = card
-		})
-		Utility.New("TextLabel", {
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-			Text = data.Content or "", Font = Enum.Font.Gotham, TextSize = 12, TextWrapped = true,
-			TextColor3 = Theme.Get("SubText"), TextXAlignment = Enum.TextXAlignment.Left, Parent = card
-		})
-
-		Animation.Tween(card, Animation.Easing.Smooth, { BackgroundTransparency = 0 })
-		Animation.Tween(stroke, Animation.Easing.Smooth, { Transparency = 0.3 })
-
-		task.delay(data.Duration or 4, function()
-			if not card.Parent then return end
-			local tw = Animation.Tween(card, Animation.Easing.Normal, { BackgroundTransparency = 1 })
-			Animation.Tween(stroke, Animation.Easing.Normal, { Transparency = 1 })
-			tw.Completed:Connect(function() card:Destroy() end)
-		end)
-	end
-
-	return Notification
-end)()
-
-Modules.Button = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Animation = Modules.Animation
-local Button = {}
-Button.__index = Button
-
-function Button.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Button)
-	self.Instance = Utility.New("TextButton", {
-		Name = "Button", Text = "", AutoButtonColor = false,
-		BackgroundColor3 = Theme.Get("ElementBackground"), Size = UDim2.new(1, 0, 0, 36),
-		Parent = parent
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = self.Instance })
-
-	Utility.New("TextLabel", {
-		BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
-		Text = config.Title or "Button", Font = Enum.Font.GothamMedium, TextSize = 13,
-		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Instance
-	})
-
-	Animation.Hover(self.Instance, Theme.Get("ElementBackground"):Lerp(Theme.Get("Accent"), 0.15), Theme.Get("ElementBackground"))
-	self.Instance.MouseButton1Click:Connect(function()
-		Animation.Click(self.Instance)
-		Utility.SafeCall(config.Callback)
-	end)
-	return self
-end
-return Button
-end)()
-
-Modules.Toggle = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Animation = Modules.Animation
-local Toggle = {}
-Toggle.__index = Toggle
-
-function Toggle.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Toggle)
-	self.Value = config.Default or false
-
-	self.Instance = Utility.New("Frame", {
-		Name = "Toggle", BackgroundColor3 = Theme.Get("ElementBackground"),
-		Size = UDim2.new(1, 0, 0, 36), Parent = parent
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 8), Parent = self.Instance })
-
-	Utility.New("TextLabel", {
-		BackgroundTransparency = 1, Size = UDim2.new(1, -38, 1, 0),
-		Text = config.Title or "Toggle", Font = Enum.Font.GothamMedium, TextSize = 13,
-		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Instance
-	})
-
-	local box = Utility.New("TextButton", {
-		Text = "", AutoButtonColor = false, AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = Theme.Get("Background"), Parent = self.Instance
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = box })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.4, Thickness = 1, Parent = box })
-
-	local function render(anim)
-		local col = self.Value and Theme.Get("Accent") or Theme.Get("Background")
-		if anim then Animation.Tween(box, Animation.Easing.Fast, { BackgroundColor3 = col }) else box.BackgroundColor3 = col end
-	end
-
-	box.MouseButton1Click:Connect(function()
-		self.Value = not self.Value
-		render(true)
-		Utility.SafeCall(config.Callback, self.Value)
-	end)
-	render(false)
-
-	-- เพิ่มใหม่: ลงทะเบียนกับระบบ Config ถ้ามีการตั้ง Flag ไว้ (ไม่บังคับ)
-	if config.Flag then
-		Modules.Config.Register(config.Flag, {
-			Get = function() return self.Value end,
-			Set = function(v) self.Value = v and true or false; render(false) end,
-		})
-	end
-
-	return self
-end
-return Toggle
-end)()
-
-Modules.Slider = (function()
-local UserInputService = game:GetService("UserInputService")
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Animation = Modules.Animation
-local Slider = {}
-Slider.__index = Slider
-
-function Slider.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Slider)
-	self.Min = config.Min or 0
-	self.Max = config.Max or 100
-	self.Value = Utility.Clamp(config.Default or self.Min, self.Min, self.Max)
-	self.Dragging = false
-
-	self.Instance = Utility.New("Frame", {
-		Name = "Slider", BackgroundColor3 = Theme.Get("ElementBackground"),
-		Size = UDim2.new(1, 0, 0, 46), Parent = parent
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 6), Parent = self.Instance })
-
-	local header = Utility.New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Parent = self.Instance })
-	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -50, 1, 0), Text = config.Title or "Slider", Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = header })
-	local valLbl = Utility.New("TextLabel", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Size = UDim2.fromOffset(50, 16), Text = tostring(self.Value), Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Accent"), TextXAlignment = Enum.TextXAlignment.Right, Parent = header })
-
-	local bar = Utility.New("Frame", { Position = UDim2.new(0, 0, 0, 26), Size = UDim2.new(1, 0, 0, 5), BackgroundColor3 = Theme.Get("AccentDim"), Parent = self.Instance })
-	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
-	local fill = Utility.New("Frame", { Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = Theme.Get("Accent"), Parent = bar })
-	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fill })
-
-	local function update(xPos)
-		local rel = Utility.Clamp((xPos - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-		local raw = self.Min + rel * (self.Max - self.Min)
-		local stepped = Utility.Round(raw / (config.Increment or 1)) * (config.Increment or 1)
-		self.Value = Utility.Clamp(stepped, self.Min, self.Max)
-		valLbl.Text = tostring(self.Value)
-		fill.Size = UDim2.new((self.Value - self.Min)/(self.Max - self.Min), 0, 1, 0)
-		Utility.SafeCall(config.Callback, self.Value)
-	end
-
-	bar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			self.Dragging = true
-			update(input.Position.X)
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if self.Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			update(input.Position.X)
-		end
-	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then self.Dragging = false end
-	end)
-
-	fill.Size = UDim2.new((self.Value - self.Min)/(self.Max - self.Min), 0, 1, 0)
-
-	if config.Flag then
-		Modules.Config.Register(config.Flag, {
-			Get = function() return self.Value end,
-			Set = function(v)
-				self.Value = Utility.Clamp(v, self.Min, self.Max)
-				valLbl.Text = tostring(self.Value)
-				fill.Size = UDim2.new((self.Value - self.Min)/(self.Max - self.Min), 0, 1, 0)
-			end,
-		})
-	end
-
-	return self
-end
-return Slider
-end)()
-
-Modules.Dropdown = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Animation = Modules.Animation
-local Dropdown = {}
-Dropdown.__index = Dropdown
-
-function Dropdown.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Dropdown)
-	self.Options = config.Options or {}
-	self.Selected = config.Default or self.Options[1] or ""
-	self.Open = false
-
-	self.Instance = Utility.New("Frame", {
-		Name = "Dropdown", BackgroundColor3 = Theme.Get("ElementBackground"),
-		Size = UDim2.new(1, 0, 0, 36), ClipsDescendants = true, Parent = parent
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
-
-	local header = Utility.New("TextButton", { Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 36), Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = header })
-	local lbl = Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -20, 1, 0), Text = (config.Title or "Dropdown") .. ": " .. tostring(self.Selected), Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = header })
-
-	local holder = Utility.New("Frame", { Position = UDim2.new(0, 0, 0, 36), Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1, Parent = self.Instance })
-	Utility.New("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 2), Parent = holder })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = holder })
-
-	local function refresh()
-		for _, c in ipairs(holder:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-		for _, opt in ipairs(self.Options) do
-			local optBtn = Utility.New("TextButton", { Text = opt, AutoButtonColor = false, BackgroundColor3 = Theme.Get("Background"), Size = UDim2.new(1, 0, 0, 26), Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Theme.Get("SubText"), Parent = holder })
-			Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = optBtn })
-			optBtn.MouseButton1Click:Connect(function()
-				self.Selected = opt
-				lbl.Text = (config.Title or "Dropdown") .. ": " .. tostring(opt)
-				self.Open = false
-				Animation.Tween(self.Instance, Animation.Easing.Fast, { Size = UDim2.new(1, 0, 0, 36) })
-				Utility.SafeCall(config.Callback, opt)
-			end)
-		end
-	end
-
-	header.MouseButton1Click:Connect(function()
-		self.Open = not self.Open
-		local targetH = 36 + (#self.Options * 28) + 8
-		Animation.Tween(self.Instance, Animation.Easing.Smooth, { Size = UDim2.new(1, 0, 0, self.Open and math.min(targetH, 160) or 36) })
-	end)
-
-	refresh()
-	function self:Refresh(list) self.Options = list; refresh() end
-
-	if config.Flag then
-		Modules.Config.Register(config.Flag, {
-			Get = function() return self.Selected end,
-			Set = function(v)
-				self.Selected = v
-				lbl.Text = (config.Title or "Dropdown") .. ": " .. tostring(v)
-			end,
-		})
-	end
-
-	return self
-end
-return Dropdown
-end)()
-
-Modules.ColorPicker = (function()
-local UserInputService = game:GetService("UserInputService")
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local ColorPicker = {}
-ColorPicker.__index = ColorPicker
-
-function ColorPicker.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, ColorPicker)
-	self.Value = config.Default or Color3.fromRGB(220, 30, 30)
-
-	self.Instance = Utility.New("Frame", {
-		Name = "ColorPicker", BackgroundColor3 = Theme.Get("ElementBackground"),
-		Size = UDim2.new(1, 0, 0, 100), Parent = parent
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 6), Parent = self.Instance })
-
-	local header = Utility.New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Parent = self.Instance })
-	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -30, 1, 0), Text = config.Title or "Color Picker", Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = header })
-	local preview = Utility.New("Frame", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(20, 20), BackgroundColor3 = self.Value, Parent = header })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = preview })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1, Parent = preview })
-
-	local r, g, b = math.floor(self.Value.R * 255), math.floor(self.Value.G * 255), math.floor(self.Value.B * 255)
-
-	local function makeSlider(name, val, col)
-		local row = Utility.New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Parent = self.Instance })
-		Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.fromOffset(15, 20), Text = name, Font = Enum.Font.GothamBold, TextSize = 11, TextColor3 = col, Parent = row })
-		local bar = Utility.New("Frame", { Position = UDim2.new(0, 18, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), Size = UDim2.new(1, -18, 0, 4), BackgroundColor3 = Theme.Get("AccentDim"), Parent = row })
-		Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
-		local fill = Utility.New("Frame", { Size = UDim2.new(val/255, 0, 1, 0), BackgroundColor3 = col, Parent = bar })
-		Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fill })
-
-		local dragging = false
-		bar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end
-		end)
-		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-				local rel = Utility.Clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-				fill.Size = UDim2.new(rel, 0, 1, 0)
-				if name == "R" then r = math.floor(rel * 255 + 0.5)
-				elseif name == "G" then g = math.floor(rel * 255 + 0.5)
-				elseif name == "B" then b = math.floor(rel * 255 + 0.5) end
-				self.Value = Color3.fromRGB(r, g, b)
-				preview.BackgroundColor3 = self.Value
-				Utility.SafeCall(config.Callback, self.Value)
-			end
-		end)
-	end
-
-	makeSlider("R", r, Color3.fromRGB(255, 80, 80))
-	makeSlider("G", g, Color3.fromRGB(80, 255, 100))
-	makeSlider("B", b, Color3.fromRGB(80, 150, 255))
-
-return self
-end
-return ColorPicker
-end)()
-
-Modules.Textbox = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Textbox = {}
-Textbox.__index = Textbox
-function Textbox.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Textbox)
-	self.Value = config.Default or ""
-	self.Instance = Utility.New("Frame", { Name = "Textbox", BackgroundColor3 = Theme.Get("ElementBackground"), Size = UDim2.new(1, 0, 0, 50), Parent = parent })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 6), Parent = self.Instance })
-
-	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Text = config.Title or "Textbox", Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Instance })
-	local boxBg = Utility.New("Frame", { Position = UDim2.new(0, 0, 0, 22), Size = UDim2.new(1, 0, 0, 22), BackgroundColor3 = Theme.Get("Background"), Parent = self.Instance })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = boxBg })
-	local box = Utility.New("TextBox", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = self.Value, PlaceholderText = config.Placeholder or "Type...", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Theme.Get("Text"), Parent = boxBg })
-	box.FocusLost:Connect(function()
-		self.Value = box.Text
-		Utility.SafeCall(config.Callback, self.Value)
-	end)
-	return self
-end
-return Textbox
-end)()
-
-Modules.Paragraph = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Paragraph = {}
-Paragraph.__index = Paragraph
-function Paragraph.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Paragraph)
-	self.Instance = Utility.New("Frame", { Name = "Paragraph", BackgroundColor3 = Theme.Get("ElementBackground"), Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = parent })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.8, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = self.Instance })
-	Utility.New("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 4), Parent = self.Instance })
-
-	if config.Title and config.Title ~= "" then
-		Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Text = config.Title, Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Instance })
-	end
-	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Text = config.Content or "", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Theme.Get("SubText"), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Instance })
-	return self
-end
-return Paragraph
-end)()
-
-Modules.Label = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Label = {}
-Label.__index = Label
-function Label.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Label)
-	self.Instance = Utility.New("TextLabel", { Name = "Label", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = config.Text or "Label", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Theme.Get("SubText"), TextXAlignment = Enum.TextXAlignment.Left, Parent = parent })
-	return self
-end
-return Label
-end)()
-
-Modules.Section = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Section = {}
-Section.__index = Section
-
-function Section.new(parent, config)
-	config = config or {}
-	local self = setmetatable({}, Section)
-	self.Instance = Utility.New("Frame", { Name = "Section", BackgroundColor3 = Theme.Get("SecondaryBackground"), Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = parent })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 8), Parent = self.Instance })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.8, Thickness = 1, Parent = self.Instance })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = self.Instance })
-	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Text = config.Title or "Section", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Accent"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Instance })
-
-	self.Content = Utility.New("Frame", { BackgroundTransparency = 1, Position = UDim2.new(0, 0, 0, 20), Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = self.Instance })
-	Utility.New("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 6), Parent = self.Content })
-	return self
-end
-
-function Section:CreateButton(cfg) return Modules.Button.new(self.Content, cfg) end
-function Section:CreateToggle(cfg) return Modules.Toggle.new(self.Content, cfg) end
-function Section:CreateSlider(cfg) return Modules.Slider.new(self.Content, cfg) end
-function Section:CreateDropdown(cfg) return Modules.Dropdown.new(self.Content, cfg) end
-function Section:CreateTextbox(cfg) return Modules.Textbox.new(self.Content, cfg) end
-function Section:CreateParagraph(cfg) return Modules.Paragraph.new(self.Content, cfg) end
-function Section:CreateLabel(cfg) return Modules.Label.new(self.Content, cfg) end
-function Section:CreateColorPicker(cfg) return Modules.ColorPicker.new(self.Content, cfg) end
-
--- เพิ่มใหม่: Keybind (ปุ่มลัด กดคีย์บอร์ดเพื่อสั่งงาน)
-function Section:CreateKeybind(cfg)
-	cfg = cfg or {}
-	local UserInputService = game:GetService("UserInputService")
-	local keybind = { Value = cfg.Default or Enum.KeyCode.Unknown, Listening = false }
-
-	local inst = Utility.New("Frame", {
-		Name = "Keybind", BackgroundColor3 = Theme.Get("ElementBackground"),
-		Size = UDim2.new(1, 0, 0, 36), Parent = self.Content
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = inst })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = inst })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = inst })
-
-	Utility.New("TextLabel", {
-		BackgroundTransparency = 1, Size = UDim2.new(1, -70, 1, 0),
-		Text = cfg.Title or "Keybind", Font = Enum.Font.GothamMedium, TextSize = 13,
-		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = inst
-	})
-
-	local keyBtn = Utility.New("TextButton", {
-		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0),
-		Size = UDim2.fromOffset(60, 22), BackgroundColor3 = Theme.Get("Background"),
-		Text = keybind.Value.Name, Font = Enum.Font.GothamBold, TextSize = 11,
-		TextColor3 = Theme.Get("Accent"), AutoButtonColor = false, Parent = inst
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = keyBtn })
-
-	keyBtn.MouseButton1Click:Connect(function()
-		keybind.Listening = true
-		keyBtn.Text = "..."
-	end)
-
-	UserInputService.InputBegan:Connect(function(input, processed)
-		if keybind.Listening and input.UserInputType == Enum.UserInputType.Keyboard then
-			keybind.Value = input.KeyCode
-			keyBtn.Text = input.KeyCode.Name
-			keybind.Listening = false
-			return
-		end
-		if not processed and not keybind.Listening and input.UserInputType == Enum.UserInputType.Keyboard
-			and input.KeyCode == keybind.Value then
-			Utility.SafeCall(cfg.Callback)
-		end
-	end)
-
-	if cfg.Flag then
-		Modules.Config.Register(cfg.Flag, {
-			Get = function() return keybind.Value.Name end,
-			Set = function(name)
-				local ok, item = pcall(function() return Enum.KeyCode[name] end)
-				if ok and item then keybind.Value = item; keyBtn.Text = item.Name end
-			end,
-		})
-	end
-
-	return keybind
-end
-
-return Section
-end)()
-
-Modules.Tab = (function()
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Animation = Modules.Animation
-local Tab = {}
-Tab.__index = Tab
-
-function Tab.new(window, tabListParent, pageParent, config)
-	config = config or {}
-	local self = setmetatable({}, Tab)
-	self.Window = window
-
-	self.Button = Utility.New("TextButton", { Name = "TabBtn", Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Parent = tabListParent })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Button })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = self.Button })
-
-	self.Indicator = Utility.New("Frame", { Size = UDim2.new(0, 2, 0, 14), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Theme.Get("Accent"), BackgroundTransparency = 1, Parent = self.Button })
-	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = self.Indicator })
-
-	self.Label = Utility.New("TextLabel", { Position = UDim2.new(0, 8, 0, 0), Size = UDim2.new(1, -8, 1, 0), BackgroundTransparency = 1, Text = config.Title or "Tab", Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = Theme.Get("SubText"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.Button })
-
-	self.Page = Utility.New("ScrollingFrame", { Name = "Page", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 2, Visible = false, Parent = pageParent })
-	Utility.New("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 8), Parent = self.Page })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 2), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 2), Parent = self.Page })
-
-	self.Button.MouseButton1Click:Connect(function() self.Window:SelectTab(self) end)
-	return self
-end
-
-function Tab:CreateSection(cfg) return Modules.Section.new(self.Page, cfg) end
-
-function Tab:SetActive(active)
-	self.Active = active
-	self.Page.Visible = active
-	Animation.Tween(self.Indicator, Animation.Easing.Normal, { BackgroundTransparency = active and 0 or 1 })
-	Animation.Tween(self.Label, Animation.Easing.Normal, { TextColor3 = active and Theme.Get("Text") or Theme.Get("SubText") })
-end
-
-return Tab
-end)()
-
-Modules.Window = (function()
+-- ตัวแปรระบบ Roblox พื้นฐาน
 local Players = game:GetService("Players")
-local Theme = Modules.Theme
-local Utility = Modules.Utility
-local Animation = Modules.Animation
-local Window = {}
-Window.__index = Window
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
 
-function Window.new(config)
-	config = config or {}
-	local self = setmetatable({}, Window)
-	self.Tabs = {}
-	self.ActiveTab = nil
-	self.Minimized = false
+-- ====================================================================
+-- 1. HOME TAB: ข้อมูลผู้เล่นและสถิติ
+-- ====================================================================
+HomeSection:CreateButton({
+    Title = "ชื่อผู้ใช้: " .. LocalPlayer.Name,
+    Callback = function() end
+})
 
-	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-	self.ScreenGui = Utility.New("ScreenGui", { Name = "PISIT_HUB", ResetOnSpawn = false, Parent = playerGui })
+HomeSection:CreateButton({
+    Title = "User ID: " .. tostring(LocalPlayer.UserId),
+    Callback = function() end
+})
 
-	self.Main = Utility.New("Frame", { Name = "Main", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(400, 320), BackgroundColor3 = Theme.Get("Background"), ClipsDescendants = true, Parent = self.ScreenGui })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 10), Parent = self.Main })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1.2, Transparency = 0.2, Parent = self.Main })
+HomeSection:CreateButton({
+    Title = "เกมที่เล่น (Place ID): " .. tostring(game.PlaceId),
+    Callback = function() end
+})
 
-	self:_buildTopBar(config.Title or "PISIT HUB")
-	self:_buildBody()
-	self:_buildTogglePill()
-	Modules.Notification.Init(self.ScreenGui) -- เพิ่มใหม่: เปิดใช้งานระบบแจ้งเตือน
-	Utility.MakeDraggable(self.Main, self.TopBar)
-	Utility.MakeDraggable(self.TogglePill)
-	Animation.OpenWindow(self.Main)
-	return self
+StatsSection:CreateButton({
+    Title = "สถานะระบบ: พร้อมใช้งาน (Ready)",
+    Callback = function() end
+})
+
+-- ====================================================================
+-- 2. PLAYER TAB: ระบบเคลื่อนไหวและความเร็ว (WalkSpeed, JumpPower, Noclip)
+-- ====================================================================
+local speedEnabled = false
+local customWalkSpeed = 16
+
+MoveSection:CreateToggle({
+    Title = "เปิด/ปิด ระบบความเร็ววิ่ง",
+    Default = false,
+    Callback = function(state)
+        speedEnabled = state
+        if not speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+})
+
+MoveSection:CreateSlider({
+    Title = "ปรับความเร็ววิ่ง (1-1000)",
+    Min = 1,
+    Max = 1000,
+    Increment = 1,
+    Default = 16,
+    Callback = function(value)
+        customWalkSpeed = value
+    end
+})
+
+RunService.Heartbeat:Connect(function()
+    if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = customWalkSpeed
+    end
+end)
+
+-- ระบบกระโดดสูง
+local jumpEnabled = false
+local customJumpPower = 50
+
+MoveSection:CreateToggle({
+    Title = "เปิด/ปิด พลังกระโดดสูง",
+    Default = false,
+    Callback = function(state)
+        jumpEnabled = state
+        if not jumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+    end
+})
+
+MoveSection:CreateSlider({
+    Title = "ปรับความสูงการกระโดด (50-500)",
+    Min = 50,
+    Max = 500,
+    Increment = 5,
+    Default = 50,
+    Callback = function(value)
+        customJumpPower = value
+    end
+})
+
+RunService.Heartbeat:Connect(function()
+    if jumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = customJumpPower
+    end
+end)
+
+-- ระบบ Noclip (เดินทะลุกำแพง)
+local noclipConnection = nil
+ActionSection:CreateToggle({
+    Title = "เดินทะลุกำแพง (Noclip)",
+    Default = false,
+    Callback = function(state)
+        if state then
+            noclipConnection = RunService.Stepped:Connect(function()
+                if LocalPlayer.Character then
+                    for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            if noclipConnection then
+                noclipConnection:Disconnect()
+                noclipConnection = nil
+            end
+        end
+    end
+})
+
+-- ระบบ Infinite Jump
+local infJumpConn = nil
+ActionSection:CreateToggle({
+    Title = "กระโดดกลางอากาศไม่จำกัด (Inf Jump)",
+    Default = false,
+    Callback = function(state)
+        if state then
+            infJumpConn = UserInputService.JumpRequest:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                    LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        else
+            if infJumpConn then infJumpConn:Disconnect() infJumpConn = nil end
+        end
+    end
+})
+
+-- ====================================================================
+-- 3. VISUALS TAB: ESP 2D Box และระบบเลือกสีได้
+-- ====================================================================
+local espEnabled = false
+local espColor = Color3.fromRGB(255, 255, 255)
+local espDrawings = {}
+
+local function removeESP(player)
+    if espDrawings[player] then
+        for _, d in pairs(espDrawings[player]) do d:Remove() end
+        espDrawings[player] = nil
+    end
 end
 
-function Window:_buildTopBar(titleText)
-	self.TopBar = Utility.New("Frame", { Name = "TopBar", BackgroundColor3 = Theme.Get("SecondaryBackground"), Size = UDim2.new(1, 0, 0, 40), Parent = self.Main })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 10), Parent = self.TopBar })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 8), Parent = self.TopBar })
+local function setupESP(player)
+    if player == LocalPlayer then return end
+    local box = Drawing.new("Square")
+    box.Visible = false
+    box.Color = espColor
+    box.Thickness = 1.5
+    box.Filled = false
+    espDrawings[player] = { Box = box }
 
-	Utility.New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, -65, 1, 0), Text = titleText, Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Accent"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.TopBar })
+    player.CharacterRemoving:Connect(function() removeESP(player) end)
+end
 
-	-- ปุ่มปิด (X)
-	local closeBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "x", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 5), Parent = closeBtn })
-	closeBtn.MouseButton1Click:Connect(function() self.ScreenGui:Destroy() end)
+for _, p in ipairs(Players:GetPlayers()) do setupESP(p) end
+Players.PlayerAdded:Connect(setupESP)
+Players.PlayerRemoving:Connect(removeESP)
 
-	-- ปุ่มย่อหน้าต่าง (-) เว้นระยะ -50 ตามที่มึงชอบ
-	local minBtn = Utility.New("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -50, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = Theme.Get("ElementBackground"), Text = "-", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Get("Text"), AutoButtonColor = false, Parent = self.TopBar })
-	Utility.New("UICorner", { CornerRadius = UDim.new(0, 5), Parent = minBtn })
-	minBtn.MouseButton1Click:Connect(function()
-		self.Minimized = true
-		Animation.CloseWindow(self.Main, function()
-			self.TogglePill.Visible = true
+ESPSection:CreateToggle({
+    Title = "เปิด/ปิด ESP 2D Box ทั่วแมพ",
+    Default = false,
+    Callback = function(state)
+        espEnabled = state
+        if not espEnabled then
+            for p, _ in pairs(espDrawings) do removeESP(p) end
+        end
+    end
+})
+
+ColorSection:CreateDropdown({
+    Title = "เลือกสี ESP",
+    Options = {"สีขาว", "สีแดง", "สีเขียว", "สีฟ้า", "สีเหลือง", "สีชมพู"},
+    Default = "สีขาว",
+    Callback = function(selected)
+        if selected == "สีขาว" then espColor = Color3.fromRGB(255, 255, 255)
+        elseif selected == "สีแดง" then espColor = Color3.fromRGB(255, 0, 0)
+        elseif selected == "สีเขียว" then espColor = Color3.fromRGB(0, 255, 0)
+        elseif selected == "สีฟ้า" then espColor = Color3.fromRGB(0, 150, 255)
+        elseif selected == "สีเหลือง" then espColor = Color3.fromRGB(255, 255, 0)
+        elseif selected == "สีชมพู" then espColor = Color3.fromRGB(255, 105, 180) end
+
+        for _, drawings in pairs(espDrawings) do
+            if drawings and drawings.Box then drawings.Box.Color = espColor end
+        end
+    end
+})
+
+RunService.RenderStepped:Connect(function()
+    if not espEnabled then return end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") then
+            local hrp = player.Character.HumanoidRootPart
+            local hum = player.Character.Humanoid
+            if hum.Health > 0 then
+                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                if onScreen then
+                    if not espDrawings[player] then setupESP(player) end
+                    local drawings = espDrawings[player]
+                    if drawings and drawings.Box then
+                        local head = player.Character:FindFirstChild("Head")
+                        local top = head and Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or vector
+                        local leg = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+                        local h = math.abs(top.Y - leg.Y)
+                        local w = h / 2
+                        drawings.Box.Size = Vector2.new(w, h)
+                        drawings.Box.Position = Vector2.new(vector.X - w/2, top.Y)
+                        drawings.Box.Color = espColor
+                        drawings.Box.Visible = true
+                    end
+                else
+                    if espDrawings[player] and espDrawings[player].Box then
+                        espDrawings[player].Box.Visible = false
+                    end
+                end
+            else
+                if espDrawings[player] and espDrawings[player].Box then
+                    espDrawings[player].Box.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- ====================================================================
+-- 4. CHEAT TAB: ปุ่มกดรันสคริปต์เสริม (ผลักกระเด็น & บิน)
+-- ====================================================================
+CheatSection:CreateButton({
+    Title = "สคริปผักกระเด็น",
+    Callback = function()
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/%E0%B8%9C%E0%B8%A5%E0%B8%B1%E0%B8%81%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%94%E0%B9%87%E0%B8%99"))()
+        end)
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปบิน",
+    Callback = function()
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/%E0%B8%9A%E0%B8%B4%E0%B8%99"))()
 		end)
-	end)
-end
+    end
+})
 
-function Window:_buildBody()
-	self.Body = Utility.New("Frame", { Name = "Body", Position = UDim2.new(0, 0, 0, 40), Size = UDim2.new(1, 0, 1, -40), BackgroundTransparency = 1, Parent = self.Main })
-	self.Sidebar = Utility.New("ScrollingFrame", { Name = "Sidebar", BackgroundColor3 = Theme.Get("SecondaryBackground"), Size = UDim2.new(0, 110, 1, 0), CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 2, Parent = self.Body })
-	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = self.Sidebar })
-	Utility.New("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 3), Parent = self.Sidebar })
+-- ====================================================================
+-- 5. WORLD & PERFORMANCE TAB: บายพาสภาพชัด คมชัด และลื่นไหล 120 FPS
+-- ====================================================================
+PerfSection:CreateToggle({
+    Title = "บายพาส ภาพชัด คมชัด & ลื่นไหล 120 FPS",
+    Default = false,
+    Callback = function(state)
+        if state then
+            Lighting.GlobalShadows = true
+            Lighting.Brightness = 1.5
+            Lighting.FogEnd = 9e9
+            
+            if pcall(function() setfpscap(120) end) then
+                setfpscap(120)
+            end
+            
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level21
+        else
+            Lighting.GlobalShadows = true
+            if pcall(function() setfpscap(60) end) then
+                setfpscap(60)
+            end
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+        end
+    end
+})
 
-	self.PageContainer = Utility.New("Frame", { Name = "PageContainer", Position = UDim2.new(0, 110, 0, 0), Size = UDim2.new(1, -110, 1, 0), BackgroundTransparency = 1, Parent = self.Body })
-end
-
-function Window:_buildTogglePill()
-	-- ปุ่มลอยสำหรับเปิด UI คืนเมื่อถูกย่อ (แก้ให้ชัดเจนขึ้น ไม่ให้ดูเหมือนหาย)
-	self.TogglePill = Utility.New("TextButton", {
-		Name = "TogglePill", Text = "", AutoButtonColor = false,
-		AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 16),
-		Size = UDim2.fromOffset(150, 38),
-		BackgroundColor3 = Theme.Get("SecondaryBackground"), Visible = false, Parent = self.ScreenGui
-	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = self.TogglePill })
-	local pillStroke = Utility.New("UIStroke", { Color = Theme.Get("Accent"), Thickness = 1.5, Transparency = 0.1, Parent = self.TogglePill })
-
-	local pillLabel = Utility.New("TextLabel", {
-		BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 16, 0, 0),
-		Text = "เปิด PISIT HUB", Font = Enum.Font.GothamBold, TextSize = 13,
-		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.TogglePill
-	})
-
-	-- เอฟเฟกต์เรืองแสงเบาๆ ให้เห็นชัดว่ากดได้ (ไม่ใช่แค่ตัวหนังสือ P เล็กๆ เหมือนเดิม)
-	task.spawn(function()
-		while self.TogglePill.Parent do
-			if self.TogglePill.Visible then
-				Animation.Glow(pillStroke, true)
-				task.wait(0.8)
-				Animation.Glow(pillStroke, false)
-				task.wait(0.8)
-			else
-				task.wait(0.3)
-			end
-		end
-	end)
-
-	self.TogglePill.MouseButton1Click:Connect(function()
-		self.Minimized = false
-		self.TogglePill.Visible = false
-		Animation.OpenWindow(self.Main)
-	end)
-end
-
-function Window:CreateTab(config)
-	local tab = Modules.Tab.new(self, self.Sidebar, self.PageContainer, config)
-	table.insert(self.Tabs, tab)
-	if #self.Tabs == 1 then self:SelectTab(tab) end
-	return tab
-end
-
-function Window:SelectTab(tab)
-	if self.ActiveTab then self.ActiveTab:SetActive(false) end
-	self.ActiveTab = tab
-	tab:SetActive(true)
-end
-
-return Window
-end)()
-
-local Library = {}
-Library._version = "2.1.0"
-function Library:CreateWindow(config) return Modules.Window.new(config) end
-
--- เพิ่มใหม่: ฟังก์ชันที่ขาดหายไปจากตอนแรก
-function Library:Notify(data) Modules.Notification.Notify(data) end
-function Library:SaveConfig(name) return Modules.Config.Save(name) end
-function Library:LoadConfig(name) return Modules.Config.Load(name) end
-function Library:EnableAutoSave(name, interval) return Modules.Config.EnableAutoSave(name, interval) end
-function Library:DisableAutoSave() return Modules.Config.DisableAutoSave() end
-
-return Library
+WorldSection:CreateToggle({
+    Title = "เปิดไฟสว่างคมชัดทั่วแมพ (Fullbright HD)",
+    Default = false,
+    Callback = function(state)
+        if state then
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.GlobalShadows = false
+        else
+            Lighting.Brightness = 1
+            Lighting.ClockTime = 0
+            Lighting.GlobalShadows = true
+        end
+    end
+})
