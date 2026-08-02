@@ -518,7 +518,6 @@ local function StartFling()
         end
     end)
 end
-
 -- Stop flinging
 local function StopFling()
     if not FlingActive then return end
@@ -536,7 +535,7 @@ local function ToggleMinimize()
         MinimizeButton.Text = "+"
     else
         MainFrame.Size = UDim2.new(0, 320, 0, 350)
-ContentContainer.Visible = true
+        ContentContainer.Visible = true
         MinimizeButton.Text = "-"
     end
 end
@@ -582,4 +581,3 @@ UpdateStatus()
 
 -- Success message
 Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!", 3)
-     
