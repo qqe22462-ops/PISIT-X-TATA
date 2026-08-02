@@ -315,7 +315,8 @@ local function RefreshPlayerList()
             yPosition = yPosition + 37
         end
     end
-PlayerScrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPosition + 5)
+    
+    PlayerScrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPosition + 5)
 end
 
 local function CountSelectedTargets()
@@ -535,7 +536,7 @@ local function ToggleMinimize()
         MinimizeButton.Text = "+"
     else
         MainFrame.Size = UDim2.new(0, 320, 0, 350)
-        ContentContainer.Visible = true
+ContentContainer.Visible = true
         MinimizeButton.Text = "-"
     end
 end
@@ -580,4 +581,5 @@ RefreshPlayerList()
 UpdateStatus()
 
 -- Success message
-Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!",
+Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!", 3)
+     
