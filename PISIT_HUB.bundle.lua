@@ -602,7 +602,16 @@ end
 
 --- Fetches an icon id by name, falling back to a transparent 1x1 if
 -- the icon does not exist (prevents red "missing texture" boxes).
+--
+-- `name` may also be a raw asset id string (e.g. "rbxassetid://123456"
+-- from uploading your own PNG through Roblox's asset uploader) — in
+-- that case it is returned as-is instead of being looked up in the
+-- registry, so any element's `Icon` field accepts either a registered
+-- icon name or a direct asset id.
 function Icons.Get(name)
+	if type(name) == "string" and name:sub(1, 13) == "rbxassetid://" then
+		return name
+	end
 	return Icons.Registry[name] or "rbxasset://textures/ui/GuiImagePlaceholder.png"
 end
 
@@ -933,21 +942,30 @@ Modules.Toggle = (function()
 --[[
 	PISIT HUB | Toggle.lua
 	--------------------------------------------------------------------
-	On/off switch element with a smooth sliding knob animation, default
-	value support, callback firing, and Config.lua flag registration
-	for Save/Load/Auto Save.
+	On/off switch element rendered as a compact SQUARE icon-button
+	(rather than a horizontal slider-track), so it fits a blocky /
+	portrait-style window layout. Supports a custom icon image (pass
+	any "rbxassetid://..." you've uploaded through Roblox's asset
+	uploader), default value, callback firing, and Config.lua flag
+	registration for Save/Load/Auto Save.
 --]]
 
 local Theme = Modules.Theme
 local Utility = Modules.Utility
 local Animation = Modules.Animation
 local Config = Modules.Config
+local Icons = Modules.Icons
 
 local Toggle = {}
 Toggle.__index = Toggle
 
+local SQUARE_SIZE = 30 -- px, the icon-button's width/height
+
 --- @param parent Instance
--- @param config table -- { Title, Description, Default, Flag, Callback }
+-- @param config table -- { Title, Description, Default, Flag, Icon, Callback }
+--   Icon: optional icon name (see Icons.lua) or a raw "rbxassetid://..."
+--   string from your own uploaded image. Falls back to a built-in
+--   check icon if omitted.
 function Toggle.new(parent, config)
 	config = config or {}
 
@@ -956,11 +974,10 @@ function Toggle.new(parent, config)
 	self.Flag = config.Flag or self.Title
 	self.Callback = config.Callback or function() end
 	self.Value = config.Default or false
+	self.IconId = config.Icon or "check"
 
-	self.Instance = Utility.New("TextButton", {
+	self.Instance = Utility.New("Frame", {
 		Name = "Toggle_" .. self.Title,
-		Text = "",
-		AutoButtonColor = false,
 		BackgroundColor3 = Theme.Get("ElementBackground"),
 		Size = UDim2.new(1, 0, 0, 38),
 		Parent = parent,
@@ -971,13 +988,13 @@ function Toggle.new(parent, config)
 		Parent = self.Instance,
 	})
 	Utility.New("UIPadding", {
-		PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12),
+		PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 8),
 		Parent = self.Instance,
 	})
 
 	self.Label = Utility.New("TextLabel", {
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -50, 1, 0),
+		Size = UDim2.new(1, -(SQUARE_SIZE + 14), 1, 0),
 		Text = self.Title,
 		Font = Enum.Font.GothamMedium,
 		TextSize = 14,
@@ -986,26 +1003,37 @@ function Toggle.new(parent, config)
 		Parent = self.Instance,
 	})
 
-	-- Track + knob
-	self.Track = Utility.New("Frame", {
+	-- The square icon-button itself, anchored to the right of the row.
+	self.Square = Utility.New("TextButton", {
+		Name = "ToggleSquare",
+		Text = "",
+		AutoButtonColor = false,
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, 0, 0.5, 0),
-		Size = UDim2.fromOffset(38, 20),
-		BackgroundColor3 = Theme.Get("AccentDim"),
+		Size = UDim2.fromOffset(SQUARE_SIZE, SQUARE_SIZE),
+		BackgroundColor3 = Theme.Get("Background"),
 		Parent = self.Instance,
 	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = self.Track })
-
-	self.Knob = Utility.New("Frame", {
-		Size = UDim2.fromOffset(16, 16),
-		Position = UDim2.new(0, 2, 0.5, 0),
-		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		Parent = self.Track,
+	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = self.Square })
+	self.SquareStroke = Utility.New("UIStroke", {
+		Color = Theme.Get("Border"),
+		Thickness = 1,
+		Transparency = 0.4,
+		Parent = self.Square,
 	})
-	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = self.Knob })
 
-	self.Instance.MouseButton1Click:Connect(function()
+	self.Icon = Utility.New("ImageLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -10, 1, -10),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Image = Icons.Get(self.IconId),
+		ImageColor3 = Theme.Get("SubText"),
+		ScaleType = Enum.ScaleType.Fit,
+		Parent = self.Square,
+	})
+
+	self.Square.MouseButton1Click:Connect(function()
 		self:Set(not self.Value)
 	end)
 
@@ -1027,15 +1055,22 @@ end
 
 function Toggle:_render(animate)
 	local palette = Theme.Active
-	local trackColor = self.Value and palette.Accent or palette.AccentDim
-	local knobPos = self.Value and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+	local bgColor = self.Value and palette.AccentDim or palette.Background
+	local iconColor = self.Value and palette.Accent or palette.SubText
+	local strokeTransparency = self.Value and 0 or 0.4
 
 	if animate then
-		Animation.Tween(self.Track, Animation.Easing.Normal, { BackgroundColor3 = trackColor })
-		Animation.Tween(self.Knob, Animation.Easing.Bounce, { Position = knobPos })
+		Animation.Tween(self.Square, Animation.Easing.Fast, { BackgroundColor3 = bgColor })
+		Animation.Tween(self.Icon, Animation.Easing.Fast, { ImageColor3 = iconColor })
+		Animation.Tween(self.SquareStroke, Animation.Easing.Fast, { Transparency = strokeTransparency })
+		Animation.Click(self.Square)
+		if self.Value then
+			Animation.Glow(self.SquareStroke, true)
+		end
 	else
-		self.Track.BackgroundColor3 = trackColor
-		self.Knob.Position = knobPos
+		self.Square.BackgroundColor3 = bgColor
+		self.Icon.ImageColor3 = iconColor
+		self.SquareStroke.Transparency = strokeTransparency
 	end
 end
 
@@ -1053,6 +1088,13 @@ end
 
 function Toggle:Get()
 	return self.Value
+end
+
+--- Swaps the icon image at runtime, e.g. to plug in your own uploaded
+-- asset id after the toggle has already been created.
+function Toggle:SetIcon(iconIdOrName)
+	self.IconId = iconIdOrName
+	self.Icon.Image = Icons.Get(iconIdOrName)
 end
 
 return Toggle
@@ -2730,8 +2772,11 @@ local Tab = Modules.Tab
 local Window = {}
 Window.__index = Window
 
-local DEFAULT_SIZE = UDim2.fromOffset(560, 380)
-local MOBILE_SIZE = UDim2.fromScale(0.92, 0.7)
+-- Blocky, near-square window instead of a wide horizontal bar. Width
+-- and height are close together so the frame reads as a compact
+-- rectangle rather than a stretched-out strip.
+local DEFAULT_SIZE = UDim2.fromOffset(460, 540)
+local MOBILE_SIZE = UDim2.fromScale(0.86, 0.78)
 
 --- @param config table -- { Title, SubTitle, Theme, Size }
 function Window.new(config)
@@ -2798,27 +2843,41 @@ end
 -- Top bar: title, search box, minimize, close
 -- ====================================================================
 
+-- Top bar is two stacked rows so it reads cleanly in a blocky/portrait
+-- window: row 1 is title + window controls, row 2 is the full-width
+-- search box. TOPBAR_HEIGHT is read by _buildBody() to size the body
+-- underneath it.
+local TOPBAR_HEIGHT = 78
+
 function Window:_buildTopBar()
 	self.TopBar = Utility.New("Frame", {
 		Name = "TopBar",
 		BackgroundColor3 = Theme.Get("SecondaryBackground"),
-		Size = UDim2.new(1, 0, 0, 44),
+		Size = UDim2.new(1, 0, 0, TOPBAR_HEIGHT),
 		Parent = self.Main,
 	})
 	Utility.New("UICorner", { CornerRadius = UDim.new(0, 12), Parent = self.TopBar })
 	Utility.New("UIPadding", {
 		PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 10),
+		PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10),
+		Parent = self.TopBar,
+	})
+
+	-- Row 1: title (left) + window controls (right)
+	local row1 = Utility.New("Frame", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 34),
 		Parent = self.TopBar,
 	})
 
 	local titleHolder = Utility.New("Frame", {
 		BackgroundTransparency = 1,
-		Size = UDim2.new(0, 220, 1, 0),
-		Parent = self.TopBar,
+		Size = UDim2.new(1, -70, 1, 0),
+		Parent = row1,
 	})
 	Utility.New("TextLabel", {
 		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 0, 0, 4),
+		Position = UDim2.new(0, 0, 0, 0),
 		Size = UDim2.new(1, 0, 0, 18),
 		Text = self.Title,
 		Font = Enum.Font.GothamBold,
@@ -2830,7 +2889,7 @@ function Window:_buildTopBar()
 	if self.SubTitle ~= "" then
 		Utility.New("TextLabel", {
 			BackgroundTransparency = 1,
-			Position = UDim2.new(0, 0, 0, 22),
+			Position = UDim2.new(0, 0, 0, 18),
 			Size = UDim2.new(1, 0, 0, 14),
 			Text = self.SubTitle,
 			Font = Enum.Font.Gotham,
@@ -2845,9 +2904,9 @@ function Window:_buildTopBar()
 	local controls = Utility.New("Frame", {
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, 0, 0.5, 0),
-		Size = UDim2.fromOffset(64, 28),
+		Size = UDim2.fromOffset(60, 26),
 		BackgroundTransparency = 1,
-		Parent = self.TopBar,
+		Parent = row1,
 	})
 	Utility.New("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
@@ -2867,11 +2926,10 @@ function Window:_buildTopBar()
 		self:Close()
 	end)
 
-	-- Search box, centered, appears between title and controls
+	-- Row 2: full-width search box
 	self.SearchBox = Utility.New("TextBox", {
-		Position = UDim2.new(0, 230, 0.5, 0),
-		AnchorPoint = Vector2.new(0, 0.5),
-		Size = UDim2.new(1, -304, 0, 26),
+		Position = UDim2.new(0, 0, 0, 40),
+		Size = UDim2.new(1, 0, 0, 26),
 		BackgroundColor3 = Theme.Get("ElementBackground"),
 		PlaceholderText = "Search elements...",
 		Text = "",
@@ -2936,8 +2994,8 @@ end
 function Window:_buildBody()
 	self.Body = Utility.New("Frame", {
 		Name = "Body",
-		Position = UDim2.new(0, 0, 0, 44),
-		Size = UDim2.new(1, 0, 1, -44),
+		Position = UDim2.new(0, 0, 0, TOPBAR_HEIGHT),
+		Size = UDim2.new(1, 0, 1, -TOPBAR_HEIGHT),
 		BackgroundTransparency = 1,
 		Parent = self.Main,
 	})
