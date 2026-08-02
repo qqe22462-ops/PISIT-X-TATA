@@ -1,4 +1,3 @@
-```lua
 --[[
 	PISIT HUB | Complete Single-File Bundle (Rayfield Style with Toggle Pill)
 	--------------------------------------------------------------------
@@ -156,6 +155,129 @@ end
 return Animation
 end)()
 
+-- ===== เพิ่มใหม่: ระบบ Save/Load Config =====
+Modules.Config = (function()
+	local HttpService = game:GetService("HttpService")
+	local Config = {}
+	Config._flags = {}
+	Config._folder = "PISIT_HUB/configs"
+	Config._autoSaveEnabled = false
+
+	local function fsAvailable()
+		return typeof(writefile) == "function" and typeof(readfile) == "function" and typeof(isfile) == "function"
+	end
+	local function ensureFolder()
+		if typeof(makefolder) == "function" and typeof(isfolder) == "function" then
+			if not isfolder(Config._folder) then makefolder(Config._folder) end
+		end
+	end
+
+	function Config.Register(flag, getSet) Config._flags[flag] = getSet end
+
+	function Config.Save(name)
+		name = name or "default"
+		if not fsAvailable() then return false, "File IO ใช้ไม่ได้บนแพลตฟอร์มนี้" end
+		ensureFolder()
+		local data = {}
+		for flag, gs in pairs(Config._flags) do
+			local ok, v = pcall(gs.Get)
+			if ok then data[flag] = v end
+		end
+		local ok, encoded = pcall(HttpService.JSONEncode, HttpService, data)
+		if not ok then return false, "เข้ารหัส config ไม่สำเร็จ" end
+		local path = Config._folder .. "/" .. name .. ".json"
+		local writeOk, writeErr = pcall(writefile, path, encoded)
+		if not writeOk then return false, "เขียนไฟล์ไม่สำเร็จ: " .. tostring(writeErr) end
+		return true, "บันทึกที่ " .. path
+	end
+
+	function Config.Load(name)
+		name = name or "default"
+		if not fsAvailable() then return false, "File IO ใช้ไม่ได้บนแพลตฟอร์มนี้" end
+		local path = Config._folder .. "/" .. name .. ".json"
+		if not isfile(path) then return false, "ไม่พบไฟล์ config: " .. path end
+		local ok, raw = pcall(readfile, path)
+		if not ok then return false, "อ่านไฟล์ไม่สำเร็จ" end
+		local decodeOk, data = pcall(HttpService.JSONDecode, HttpService, raw)
+		if not decodeOk then return false, "ถอดรหัส config ไม่สำเร็จ" end
+		for flag, value in pairs(data) do
+			local gs = Config._flags[flag]
+			if gs then pcall(gs.Set, value) end
+		end
+		return true, "โหลดจาก " .. path
+	end
+
+	function Config.EnableAutoSave(name, interval)
+		Config._autoSaveEnabled = true
+		task.spawn(function()
+			while Config._autoSaveEnabled do
+				task.wait(interval or 15)
+				if Config._autoSaveEnabled then Config.Save(name) end
+			end
+		end)
+	end
+	function Config.DisableAutoSave() Config._autoSaveEnabled = false end
+
+	return Config
+end)()
+
+-- ===== เพิ่มใหม่: ระบบ Notification มุมขวาบน =====
+Modules.Notification = (function()
+	local Theme = Modules.Theme
+	local Utility = Modules.Utility
+	local Animation = Modules.Animation
+	local Notification = {}
+	local container
+
+	function Notification.Init(screenGui)
+		container = Utility.New("Frame", {
+			Name = "PISIT_Notifications", BackgroundTransparency = 1,
+			AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 12),
+			Size = UDim2.new(0, 220, 1, -24), Parent = screenGui
+		})
+		Utility.New("UIListLayout", {
+			Parent = container, HorizontalAlignment = Enum.HorizontalAlignment.Right,
+			VerticalAlignment = Enum.VerticalAlignment.Top, Padding = UDim.new(0, 6),
+		})
+	end
+
+	function Notification.Notify(data)
+		if not container then return end
+		data = data or {}
+		local card = Utility.New("Frame", {
+			BackgroundColor3 = Theme.Get("SecondaryBackground"), BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = container
+		})
+		Utility.New("UICorner", { CornerRadius = UDim.new(0, 8), Parent = card })
+		local stroke = Utility.New("UIStroke", { Color = Theme.Get("Accent"), Thickness = 1, Transparency = 1, Parent = card })
+		Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = card })
+		Utility.New("UIListLayout", { Padding = UDim.new(0, 2), Parent = card })
+
+		Utility.New("TextLabel", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16),
+			Text = data.Title or "แจ้งเตือน", Font = Enum.Font.GothamBold, TextSize = 13,
+			TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = card
+		})
+		Utility.New("TextLabel", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
+			Text = data.Content or "", Font = Enum.Font.Gotham, TextSize = 12, TextWrapped = true,
+			TextColor3 = Theme.Get("SubText"), TextXAlignment = Enum.TextXAlignment.Left, Parent = card
+		})
+
+		Animation.Tween(card, Animation.Easing.Smooth, { BackgroundTransparency = 0 })
+		Animation.Tween(stroke, Animation.Easing.Smooth, { Transparency = 0.3 })
+
+		task.delay(data.Duration or 4, function()
+			if not card.Parent then return end
+			local tw = Animation.Tween(card, Animation.Easing.Normal, { BackgroundTransparency = 1 })
+			Animation.Tween(stroke, Animation.Easing.Normal, { Transparency = 1 })
+			tw.Completed:Connect(function() card:Destroy() end)
+		end)
+	end
+
+	return Notification
+end)()
+
 Modules.Button = (function()
 local Theme = Modules.Theme
 local Utility = Modules.Utility
@@ -236,6 +358,15 @@ function Toggle.new(parent, config)
 		Utility.SafeCall(config.Callback, self.Value)
 	end)
 	render(false)
+
+	-- เพิ่มใหม่: ลงทะเบียนกับระบบ Config ถ้ามีการตั้ง Flag ไว้ (ไม่บังคับ)
+	if config.Flag then
+		Modules.Config.Register(config.Flag, {
+			Get = function() return self.Value end,
+			Set = function(v) self.Value = v and true or false; render(false) end,
+		})
+	end
+
 	return self
 end
 return Toggle
@@ -300,6 +431,18 @@ function Slider.new(parent, config)
 	end)
 
 	fill.Size = UDim2.new((self.Value - self.Min)/(self.Max - self.Min), 0, 1, 0)
+
+	if config.Flag then
+		Modules.Config.Register(config.Flag, {
+			Get = function() return self.Value end,
+			Set = function(v)
+				self.Value = Utility.Clamp(v, self.Min, self.Max)
+				valLbl.Text = tostring(self.Value)
+				fill.Size = UDim2.new((self.Value - self.Min)/(self.Max - self.Min), 0, 1, 0)
+			end,
+		})
+	end
+
 	return self
 end
 return Slider
@@ -357,6 +500,17 @@ function Dropdown.new(parent, config)
 
 	refresh()
 	function self:Refresh(list) self.Options = list; refresh() end
+
+	if config.Flag then
+		Modules.Config.Register(config.Flag, {
+			Get = function() return self.Selected end,
+			Set = function(v)
+				self.Selected = v
+				lbl.Text = (config.Title or "Dropdown") .. ": " .. tostring(v)
+			end,
+		})
+	end
+
 	return self
 end
 return Dropdown
@@ -423,7 +577,7 @@ function ColorPicker.new(parent, config)
 	makeSlider("G", g, Color3.fromRGB(80, 255, 100))
 	makeSlider("B", b, Color3.fromRGB(80, 150, 255))
 
-	return self
+return self
 end
 return ColorPicker
 end)()
@@ -520,6 +674,66 @@ function Section:CreateTextbox(cfg) return Modules.Textbox.new(self.Content, cfg
 function Section:CreateParagraph(cfg) return Modules.Paragraph.new(self.Content, cfg) end
 function Section:CreateLabel(cfg) return Modules.Label.new(self.Content, cfg) end
 function Section:CreateColorPicker(cfg) return Modules.ColorPicker.new(self.Content, cfg) end
+
+-- เพิ่มใหม่: Keybind (ปุ่มลัด กดคีย์บอร์ดเพื่อสั่งงาน)
+function Section:CreateKeybind(cfg)
+	cfg = cfg or {}
+	local UserInputService = game:GetService("UserInputService")
+	local keybind = { Value = cfg.Default or Enum.KeyCode.Unknown, Listening = false }
+
+	local inst = Utility.New("Frame", {
+		Name = "Keybind", BackgroundColor3 = Theme.Get("ElementBackground"),
+		Size = UDim2.new(1, 0, 0, 36), Parent = self.Content
+	})
+	Utility.New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = inst })
+	Utility.New("UIStroke", { Color = Theme.Get("Border"), Transparency = 0.75, Thickness = 1, Parent = inst })
+	Utility.New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = inst })
+
+	Utility.New("TextLabel", {
+		BackgroundTransparency = 1, Size = UDim2.new(1, -70, 1, 0),
+		Text = cfg.Title or "Keybind", Font = Enum.Font.GothamMedium, TextSize = 13,
+		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = inst
+	})
+
+	local keyBtn = Utility.New("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0),
+		Size = UDim2.fromOffset(60, 22), BackgroundColor3 = Theme.Get("Background"),
+		Text = keybind.Value.Name, Font = Enum.Font.GothamBold, TextSize = 11,
+		TextColor3 = Theme.Get("Accent"), AutoButtonColor = false, Parent = inst
+	})
+	Utility.New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = keyBtn })
+
+	keyBtn.MouseButton1Click:Connect(function()
+		keybind.Listening = true
+		keyBtn.Text = "..."
+	end)
+
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if keybind.Listening and input.UserInputType == Enum.UserInputType.Keyboard then
+			keybind.Value = input.KeyCode
+			keyBtn.Text = input.KeyCode.Name
+			keybind.Listening = false
+			return
+		end
+		if not processed and not keybind.Listening and input.UserInputType == Enum.UserInputType.Keyboard
+			and input.KeyCode == keybind.Value then
+			Utility.SafeCall(cfg.Callback)
+		end
+	end)
+
+	if cfg.Flag then
+		Modules.Config.Register(cfg.Flag, {
+			Get = function() return keybind.Value.Name end,
+			Set = function(name)
+				local ok, item = pcall(function() return Enum.KeyCode[name] end)
+				if ok and item then keybind.Value = item; keyBtn.Text = item.Name end
+			end,
+		})
+	end
+
+	return keybind
+end
+
 return Section
 end)()
 
@@ -589,6 +803,7 @@ function Window.new(config)
 	self:_buildTopBar(config.Title or "PISIT HUB")
 	self:_buildBody()
 	self:_buildTogglePill()
+	Modules.Notification.Init(self.ScreenGui) -- เพิ่มใหม่: เปิดใช้งานระบบแจ้งเตือน
 	Utility.MakeDraggable(self.Main, self.TopBar)
 	Utility.MakeDraggable(self.TogglePill)
 	Animation.OpenWindow(self.Main)
@@ -628,14 +843,35 @@ function Window:_buildBody()
 end
 
 function Window:_buildTogglePill()
-	-- ปุ่มโลโก้ลอยสำหรับเปิด UI คืนเมื่อถูกย่อ
+	-- ปุ่มลอยสำหรับเปิด UI คืนเมื่อถูกย่อ (แก้ให้ชัดเจนขึ้น ไม่ให้ดูเหมือนหาย)
 	self.TogglePill = Utility.New("TextButton", {
-		Name = "TogglePill", Text = "P", Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Theme.Get("Accent"),
-		AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 20, 0.3, 0), Size = UDim2.fromOffset(40, 40),
-		BackgroundColor3 = Theme.Get("SecondaryBackground"), AutoButtonColor = false, Visible = false, Parent = self.ScreenGui
+		Name = "TogglePill", Text = "", AutoButtonColor = false,
+		AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 16),
+		Size = UDim2.fromOffset(150, 38),
+		BackgroundColor3 = Theme.Get("SecondaryBackground"), Visible = false, Parent = self.ScreenGui
 	})
 	Utility.New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = self.TogglePill })
-	Utility.New("UIStroke", { Color = Theme.Get("Border"), Thickness = 1.5, Parent = self.TogglePill })
+	local pillStroke = Utility.New("UIStroke", { Color = Theme.Get("Accent"), Thickness = 1.5, Transparency = 0.1, Parent = self.TogglePill })
+
+	local pillLabel = Utility.New("TextLabel", {
+		BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 16, 0, 0),
+		Text = "เปิด PISIT HUB", Font = Enum.Font.GothamBold, TextSize = 13,
+		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.TogglePill
+	})
+
+	-- เอฟเฟกต์เรืองแสงเบาๆ ให้เห็นชัดว่ากดได้ (ไม่ใช่แค่ตัวหนังสือ P เล็กๆ เหมือนเดิม)
+	task.spawn(function()
+		while self.TogglePill.Parent do
+			if self.TogglePill.Visible then
+				Animation.Glow(pillStroke, true)
+				task.wait(0.8)
+				Animation.Glow(pillStroke, false)
+				task.wait(0.8)
+			else
+				task.wait(0.3)
+			end
+		end
+	end)
 
 	self.TogglePill.MouseButton1Click:Connect(function()
 		self.Minimized = false
@@ -663,4 +899,12 @@ end)()
 local Library = {}
 Library._version = "2.1.0"
 function Library:CreateWindow(config) return Modules.Window.new(config) end
+
+-- เพิ่มใหม่: ฟังก์ชันที่ขาดหายไปจากตอนแรก
+function Library:Notify(data) Modules.Notification.Notify(data) end
+function Library:SaveConfig(name) return Modules.Config.Save(name) end
+function Library:LoadConfig(name) return Modules.Config.Load(name) end
+function Library:EnableAutoSave(name, interval) return Modules.Config.EnableAutoSave(name, interval) end
+function Library:DisableAutoSave() return Modules.Config.DisableAutoSave() end
+
 return Library
