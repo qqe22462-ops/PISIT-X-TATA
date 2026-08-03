@@ -488,6 +488,7 @@ local function StartFling()
     FlingActive = true
     UpdateStatus()
     Message("Started", "Flinging " .. count .. " targets", 2)
+    
     task.spawn(function()
         while FlingActive do
             local validTargets = {}
@@ -580,5 +581,4 @@ RefreshPlayerList()
 UpdateStatus()
 
 -- Success message
-Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!",
-
+Message("Loaded", "ค่าย PISIT x ผลักกระเด็น Loaded!", 3)
