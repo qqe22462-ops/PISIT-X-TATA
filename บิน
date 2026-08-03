@@ -1,422 +1,147 @@
---[[
-    PISIT HUB - Fly Script (Red & White Theme)
-    Features:
-    - Anti-Duplicate GUI check
-    - Minimize (-) / Maximize (Logo & +) support
-    - Close (X) button
-    - Fly functionality with speed controls
-]]
+-- LuaCoder Protected Script
+-- Name: protected_script
+-- Layers: xor, caesar, reverse, base64
+-- Do not edit below this line.
 
--- Services
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
-local RunService = game:GetService("RunService")
-local Player = Players.LocalPlayer
+local __LC_KEY = "B0Ruxp4co1JY9ow5"
+local __LC_PAYLOAD = "SWQ4UXV4b0J6ODR0Q2NyaUFzTzcrdHNUQjdLNzk3Vzh5OWZCTU1hMHlBMitGUWE3dC9XMElpMEpzaFBKQ00wTzdlRHl6ZlM2QWJ6QzZBYmo5eThYNU8zcURyc2I3d3E4d3VnRzQvY1F1UWpoNmZiTnZmRUI5Z2JYK2RnU0Nyd043ZXZ6Rnh2dkN2b08xd3JVOHdxMSsrbnY2UmNheFBJSnpPd09Gc2I3QVA3UzRCYnl1QUxHdWJjTTZ2a013N2orS2l6Q0F3L0Z0TTNCNlBIaXhzSzM0UVFVeXJLOURyWE16TmdIRy9MRnV3am8xZ01HdnZUUTdmWHRFT2Z5czk0TjIvQVAwLzRDejhMSkNlc2NBc3E3NUNIcUJydTM5YlFCdyswSzRmSzFzZjRxS01MTXpBTFZCOExvQnVQM0x4YTVLaExDemJnQ3hybTNJNzRUOThTN0RkcnE2UmI3emMvSXpkY0UzZkhDK1A3cjRCQ3l2UWo3eDdQdUpTUU15Y3orM2JrRnpjY003Z2UzMkEzajhBL3p5aWNieS9qMCtNM0l1TmNQM2ljSXZBM3Q2eE1BLzhvckl3M25EOWp3eExJTkFmRU90NzdGL2dtMzdBWDg3Uzczd3Q3YUJiSytETVM4emNlNzRnM0VGK0VFMVFXNHlNVzB3c0lqQjl6dEx2ZkM2TllKekxFTHRzOE8xd1RZRE1xeEN4VGcrTCszS2NhOHNlNHVIUXl4c1E0RThjbTh2Z0lyQXNMdEJ2end4TElOQWZUc3ZMNENLaUl0Q2Nvanhnd1B4U29Yc3ZqRkFzOEh3ZkFDNFNUbEFNUXE0QTIvd2lQa0I3YlJDUk81Q0xzRjZla28zZjcxczhFdERPcjg4TXE3QXQ0YjhzNjh4Y2ZDTFF6cStjMEd6UHpweS9heHZSZkZ3c3Z0QXVEeDhQN0M3dGNKdU5IeHRMdk54UVhkRGVJRy9PM3ZBNy9DQnNuc0RORUc3QVhNOEFicDJnL1Uvdml6enIza0RjUE13N01KN3h1OUFNVDN5UW5LNUFUZUNpOFg0UVFVeXN5N0JyZ0h6OUlDNSswdkYrVG4zOExOdXdFQnpzcnNDZWJ0THhiQkl0VVB0OGdJejc3RUsvWFNBY3F5QitzaDlMdklDK2JPdDlnUXdNekt5UWZ1RzcwQXdRN0ZJakFzeWQwTHo4d0w2UEFJK01nSXhzZk03Z1FwRExHeExoblZEOHpJOHVQT3Q5Z1F3TXpLeVFmdThmTzN1TVhOeXNmdURmbndEN3dJN2ZFR3NyZnVLOFhON2NFd3hyVzMvZ0gwN1BmODhjVE96TzBRMHZmUDNMVGIxUFlYRysvUHpzN1h3ZUlOdEFBUTRmVHM5L3dMME1LeTRnL29CQkRNQyszVkVMR3h2OGEveGVndDJQZXpzU1VvNi9VV0dzN0Z4OEVKeXRjTXd4Zms3dFVGRnh2dnhjZkJET3I4OEE4UXlpWXN3dlFFemJqT3pDMEc0QVcyMmlzcUVjSzd2d2F6NytjdDhlRU9DQVBLN2RnQnp0WW9EN200NityODdTOFdDTzNUOWdERTk4a0p4T3pxL08wdTk4emU2UUh3eUF6UTI4THNFTjBGeThzaUxCTUd0THNONUwyMzBRcTFBc3EzTUJUcEJjeXhCclBLenNMUDRRRy92d2E2MXdHOXZTa1B2TGpvK3RRSzJQSU41ZHdIQUEvRnNidk9JdzNVQjhtMDRRSDA3UGY4OGNyS3N5ME00Z1cwRitFQjhRKzg5UGpLdlFib0Rkd09zUmZoQkJUS3NyME90Y3pNMkFjYjhzVzdDT2pXQXdiQ0FyWEg0ZWowNkF2cjh2cmRHNzBBd1E2MUlqQXN5ZDBMejh3TDZQQUkrTWdJeHNmTTdnUXBETEd4TGhuVkQ4ekk4dVBPdDlnUXdNeTR5K1RiMVBZQXdBYkV5TW9KOWQwQnk3c0E1N2pDemI0TXRiMnh3Y0c5RStuY3lpY2JFdXYweWc0ak1Dd0YzUUV1dkFqdDlPeTd3UW5DendZZ3dkWU16N1VHNmU3eXpCdnVLODNNNk9yODhNUE5CdW5kd2dQMEFjYkZ5T1QwM0NJS3UvN3AyQW15MDh1enpyTGlBdUVGME4zSTNOZnlGeHZ1SzhmQjYvVVR6UWE3L3VuWUNiTFR4d25OeXV3SnN2SzF6Z0hRM3hDMzFyK3p6ckxpQXVFRjBOM0kzTmZ5QUxZT0tpSXc2UFRmQmNJQXRTcmZFTC9JR002N3krWDExQXJZOGc3aDFoQy92L0xwQjdqbzlkSUZ0cjhDeXhYMHRNVHVLaU1OSy9yZStMVE5EYzRoK0w0Yjdpc0NEdHdRNGZLMXV5NFUzZ1FYRysvRng4RU02dm5ORU13QjZlN1F0Y0VHdFNJdERPdmVBZ2dReWhVb3dyaklDY0xPN2kwRjNBdkt2d1hkczlET3QvSEV5cmprQ2JMTXRydng2ZGNTdExNSTBPVU1MTVBpK01QSENlYkx4UGkzQ01xL3VPZ1U1d0hoQmczbDNBY0F3Z3dCenJIUjlSTzUrd0FOMzlZUUFMY0p5c0d6RE9yNTdTOFdEdWpnNlJjYUFyYTdzaU8rRXdMS3YvNjcyUFN4dHZIQ3hkWXRCZHdMeXI4RjNiUFF6cmZ4eE1xNDVBbXl6TGEwK2dIMDZSYStBc205QnVqMjRmSUlBN1VxNFBleHZzWEh3aTBNNnh5OXd3ZktKaVFGQi9USitzNzlLL2pZREFvTi9PZnZBN3ZteGY0SndlTHozaVRBdndVbzdRUVhHKzhLK1FvVXp5UEsrUGovN2RYUURjSU10Y3pCdGNFd3hyL01BZXZXRHJ2R3k3ZkxMUXpySEF1MXpnZSs2UVhReEJJQkJRamM5ZHdIeWJRTndPUUdzZExIQ2NEQjdjL1lCOHEvL3R2VktRQVB4YmZMQnU4QzBndk1GK0VFNEEyL3dpUGtCOHZTODk0U3RydjYydERDQS9RQ3pzcTQ1UVFkQThZWDRRUVV1YnNMeFEzeXdSekJINzNEQjhMZjRCRHlBZmZRdmNmb0Z4TzVDTHY5MmVrUDdNd0d6Z2ZENGVyODhQUzdzU29vd3ZEK0JNTWlMUW5LM3ZlMnNSN2M0UExRNThVTkM4dlIrcmI5eExFc0xCUDN1NzdMeHN6TTVQWGlETzhBdFNyZUJBREFCc1RJeWd6cStRTEt1OHJvNmZYTXQvY0J4OEhyOVJNTHRjNEh2dWtGME1RU0FiM0w3Y0hWRFM4WDVDRVpEODNDRE5XN3dkUHh5TWdRdkFiaDB5UE13ZmZLNzhMdENyWEF0cnYrNjl6MHY3d29EN3ZLMDhFd3hzbk4vT2ZQOUx2RTlkWUp5dVFFM2dvdkYrVGM0UG0vd0JYTnlzZnVMUjMzdHJ2eDZkY1M4cmNLd3RBR0lNSGhDcmdBQnVuYUQ3UWI3aXZPdCs4Ry9QRER6UWJwM2NJRDlBVFB3cy92QXViMnRCZmhCTjhRdXh2dUs4NjM3d0xWeHZzQUR1M1hCTC9CRHVVSHdkY0M0QTNLMzhqYzRQYTlzL2ZDd2VjdDg5LzJMeGZoQk5VRnVNakZDZ3ZCMXdMZ0RjcmZ6Q0xmRHJlOEtMVzh1T3duMXd6UDJyVGM0UGE5cy9mQ3dlY3Q4OS8yQ0xvQkFmVHN1OEVKd3M4R0lNSFhETWZNRytYcEQ3cklCczNaRE9jSzNnekhzLzNDRmZTN3lBakN1OFhySkIzNHpORGhBZkhKK01zTXM3MjM2Q1VwOU1ZWDRRUVV5c2U5OTdXOHdjZTcxZ2d2RitUdTFRVVhHKy9HeHNYUko5anl4N0lCN3VrUHNkSEx3cnZCOEFLeThzcTcvTnp3SS9LM0NNSzV0K3J6M2hNS3V3WHAzc0lEOUFMT3lyamxCQjBEeGhmaEFmRUdzcmZ1S2lJdzV3L1l4dmdBdFNyZkJidkUrTHJGeENNUDJBNjBBTG9xSjhLOHR3S3h2TDN2QnhNRXp4ZmhBZlRzRC9US0FjM0I2UEhpL2N5NnloVWJCcnUzOWJTeXl1WHEvTzB2RmdqdDAvWUFCTVgrdHdibkJ0ajJ0Y2NHOEJzR3NyUEZDdmtHSVA4VENBcTAvTjdhd3ZYMEF3L0Z1TmNFRS9qSkFMb3FLQUFBd3N2TnU3TGl3UnJHelBJRzNPOEQrUFR4ME1jRzVRclk5OHk3NFFIMDdMeStBZ0hOd2VqeDR2N0hzOG9WR3dhN3QvVzBzc3Jsd2QwQjBNeks3dUFGME1IOXdzWUdIY0hYQWNQUSs5SFhDQUMyRGlvaUxRenJIQUxEdS9yYjR3R3o5TXdCemNIbzhlTDl6THJDS2hMQ0MvN0ZEQW5DNkFiajk3KzBFQ29vd3J5M0FyRzh2ZThIL08wdkYrVG80QXJNOUxVQjlyd2pBeDBLdHN3TEtoTEN1djRKczczSEkvUGV4dmdBdGRnYjlQTEE5N1hNQmlyQjM4ek16djdyR3dpM0crNHFJdzByOWR3RjBRWU83ZXZ5dThnWXM4N0M3UWJCekEvK0RldlUrTTYzR00rKzJDSEoyQWZQeXZ6dHl2YTcxYi9HeHNYbTZ2enRMckVPS2l2Q0F3L0Z5YjNLNUFhN3pNUzNCK2pjRGN2Y3k3UE9zdUlDNFFYUTNjamM0UG0vd0JYTnlzZnVMUjNOQnMzODdlUUJ0T1RIQ2M3SDdQZmhBZFhNRGM4aEJiT3pCQUc3eXlNRzZQaTBBTFVWR3dYSnZRc0J6c3JzQ2VidEx4YmtHaHU5QUxnQ3hybTMzQTNWeHN5L0MrZlg2UmNhdGZZSitTTUYyQUc0emZMcDJNSzBzd2pReFMwTTYvQzJDQVBLM0J2T0VQUzZBY1VHTDdFVHVRaSt5aVlyd2dQMEE3d0orU01ONGZMRnpQdnAxOEswc3dqUXhTME02L0MyQ0FQSzNCdk9FUFM2QWNVR0w3RVR1UWkreWlZcndnUDBBN3dKK1NNTjRmTEZBQWJwMmcrMEcrNHJJaTBKQmQwQkx4Zms3ZkQwelBTNkFjM001UFhDQ2JheEVON2NEdkQrQWNySXpPUU82QzRLemczZTJnSE9zdzNrQjdqdjhmenRMeFlJN2RQMkFMZnlzNzBHSUw0VEFiR3hDQ3JkQ1JjYjd3cnl3UnpCSDczREI4b21KQVVIL1BUR3h3d1M4OTd5eGJzZ0tpakN1N0gzME8rKzVBNGQ5TVlYNFFRVXN2UUR5L0VGOWl2NDJBd0tEZnpuN3dPNzVzWCtDYjNYQ3RJTHpMc0FLTzBFRnh2dkNzaTMwUkRueGd6KzhkN1VBN0hBQXRleXd1NGpFYzZ4dXdnbzRBT3lzL0cweCswanZoUDB4Z0FHNmRvUHRCdnVLODdKNVBPMUp3cXgrOXpXOWdBUHhjYkd4ZEVIMHN6QnZ1RUI4Y2tIdDc0QkJmM291aFBLLzd1eEl1NEZzdjY0czhpeTRnYkZ4dnNBRGQzczlMSG8vY0xHRE9ZRC9PMHVEQTBSRzcwQTVNdkl5eTBNNnh3THRjNEgzaHZPL3IzM3V2Qzk1eEN4eUJESkRlZ1ZCYjIrQnJXOHpNekJNTWJCdnNybTNBT3h3TzRxSThMdEJoTU10c3YrN2VuQ3NyY050UW5MMHZQZThnak1CK2diQ0xjYjdpc0NDTzcwNFF2VS9zTHUxd200MGZHMHU4M0ZCZDBONGdiODdlOER2OElHeWV3TTBRM2p4dnNBQjl2cEQ4ejBDY0xNeSsvcS9QQzJ1L0hwMXhLMHN3alE1UXpTODlqOXg3UWFLT0FOdjdYRi9nbTQ3L0VUQ3NlOUIrYjA2UmErQXNtOUJoVVRIUUc0eHg3djFCUzh1d3pQeXNuWUtSMEpzN0l0S2lpOUFMZjF1dDNEN0JNZHpRYThBZWZWQWJQSExRTUJ0OUlDM3lmQzBRN20xQXJkeVBpend1VG5EOXdrL3M0TjN0b0J6ck1ONUFlNDZQclVDdGkwQ2V2V0x2TDd4N1M3d2R3QzN4WUcrQTNyMVBqT3R4aTF6dU1aQnVBRndRQVE0ZlRzRnJnTHhpSXdMQWpkRGN1ekFkL0swTHZFL3RYT3N1VDF3Z0xQc1FqcDJQWFkvZ3EyeCtFckJ1Y0Z0TzBONzlVQnVORy94Y0xMN1FMZzhmRHkvTzN2QTcvQ0JzbnNETkVHMmdYRDBQc0I5T3ozdC9qTnlzUXZDTjBOeTdNQjM4clF1OFQrMWM2eTVQWENBcyt4Q09uWTlkaitDcmJINFNzRjJBckd2d2pONFBhL3lCaTF6dGNaQmR3THlyOEYzYlBRenJmeHhNcTQ1QW15ekxhN0Erbmc4czBiN2lzQ3dkSU4xQVFNelF2aDZ2bTQ1QXp2ME16c0I5VDR0TzNJN2V2NTdMZnh3cjNYNXdyZURNZXovY0lWRGN1K0lnbk53ZThEMUF6anUvN3A3eFBNdHhqN3pjM3VEOVFKczlqSTNPRDJ2YlAzd3NIbkxmUFlEOGU3K3R2MDZSYjdBclRGeGVYTjF3RzB2dzI3RlFYUXl4SEd2Y1hYRk5jTnliSUo1ZkFxOHIveXorNE81d2JmQ01leUxlM3ZBY3poOGNiY0FPY0szZ3pIcy8zQ0ZmUzd5QWpDdThYckpCMzR3N1VKN2V2ekZ4dnZDczYzN3dMVnlyVzlBZHZrQ3ZDOUs4akh6ZTBQNkJnS3UvclJ6d1hNcy9IVXpjM3VEOVFKczlqSTVmQVEyL3dCeHNYSTVBKzRBYlMvL3J2dkJlMEtBY3JJek9RTzZDNEt6ZzNlMmdIT3N3M2tCN2pvRE5RQnVNM2hBZkhKdThFSndzOEs1Zy9jRE1yTEhDamc4c2ZvQXJYS3NySUYzQXZLdndYZHM5Q3p4d3ZtQWNMb0RkRUZ5dHNOM3R6MjdjZ0MxUFBDN0JEZEJjdkxJaWpwQmN5eEJyUEt6c0xQNFFITnZ3M2E2dWtYR3M3R3ZNcmtCeDhLekxFTzc5d1U4cmYxdXQzQjF3TG5GOFMzQitqY0RjdmN5ODYrek1qSjF3SE12Z25vd0FYTXMvSFV2Y0d5dTljTnliSUo1ZkFxOHNJQ3RjekYwUUxiSndyT0RlUGNCZERCN2lvakRlajAzd1hDOUEvbzFBYXlzL0hVeHJqdUIrY0Z6UERJN2V2NTdMZnh3cjNYNXdyZURNZXovY0lWRGN1K0lnbk53ZThEMUF6anUvN3A3eFBNdHhqN3pjM3VEOVFKczlqSTNPRDJ2YlAzd3NIbkxmUFlEOGU3K3R2MDZSYjdBclRGeGVYTjRnZlB6ZkhpeTlDN3hQN1Z6ckxrOWNJQ3o3RUk2ZGoxMlA0S3RzZmhLd1hZQ3NhL0NNM2c5ci9JR0xYTzF4a0YzQXZLdndYZHM5RE90L0hFeXJqa0NiTE10cnNENmVEeXpSdnVLd0xCMGczVUJBeThEZTdWQWRUK0FyR3kwdWoxMVBMVnZBSG4xUUd6eHkwUHhySHRKaHNDdzdRTTZkVWx1OGdHdGR5eTZCUXBBcyt4Q09uWTlkais5OGE5eCtUejFBN2w4dnp0MGdHN3hQZ3FJakFzQnVJS3g3ckc3OVVKMEwveTZ3ZkIwL3JIQWJTLy9ydmZDYkcrQnM2KzdpME82QXpqK0E3dDF3Uy92aUxHdmNYWEZPY0IxUVlPNGRZUXY3L3k2UWU0NlBYU0JiYS9Bc3NWOUx1NUJzYTV0d3pxK2MzRHpRYnAzYzdRNXdUUHdyTFhCcmJNdzlEeHZ1RDJ2OGdZeGNMTDdRTGc4ZkR5QmQzVkpmaTRBczNMeGUwbTJQTEh6QnZlNEJNR3VBN1F4OFh3OXJ2TXRydis2OXowdjd3b0Q3dkI2Z0xZOXJVWDRRUVVCYzNBQnNjRnl1OEMxUUhEempBbzRQTEg2QUsxeXJLeUJkd0x5cjhGM2JQUXM4Y0w1Z0hDNkEzUkJjcmJEZDdjOXUzSUF0VHp3dXdRM1FYTHl5SW82UVhNc1FhenlzN0N6K0VCemI4TjJ1cnBGeHJPeHJ6SzVBY2ZBOHEzOGVhOTBMdkUvdFhPc3VUMXdnTFBzUWpwMlBYWS9ncTJ4K0VyQmRnS3hyOEl6ZUQydjhnWXRjN1hHUVhjQzhxL0JkMnowTTYzOGNUS3VPUUpzc3kydXdQcDRQTE5HKzRyQXNIU0RkUUVETEwvNTc4SHNyc0p6Y3JrTFFiai9kUzcvdW52RTd5N0RNL0t5ZGdwSFFtenNpMGkzd1cwc2diUDdzSFhBdWNYdExzYkZOOEpzYjRHenI3dUxmUFk4c1cvL09uVEkvTENBc3pLd2RQMC9PMHU5dzNiMXdHNkFBVFB3c2p3Q3Q4bkNydjYwYzhGekxQeDFNM043Zy9VQ2JQWXlPWHdFTnY4QWNiRnlPUVB1QUcwdi82Nzd3WHRDZ0hLeU16a0R1Z3VDczROM3RvQnpyTU41QWU0NkF6VUFiak40UUh4NlJjYUFjL09MUXpySExZUXZBM3Q2eFBNd2ZMTHplVVo5L3p0THhZSDdodkorTUVReE1xNHR3L2VEYlMvQmVIVklibStEcnJLeXJQMTJDUCtzLzNDRzg3TXpBTFBDY3pzd2VYS3p3RDg1OTNwRnhydkNndTQ2QTNmQzdiTUNPZTZFTEc3OGNMR3plMGlFYzYxelFubXVnalJ1QW5Ld2VmWDlPRU40cndJNGIyOHpyTU41QW00N3NFY3lNUzNCK2pjRGN2Y3h3bTh0K1FOc2dUcHZBYmgweVBNd2ZmSzc4THRDclhBdHI4Q3l4dTlBTC95NlFuSzVBVGVDaThYNU83VkJSY2I3OGErdU5mQk1NYkV1d2JzM1BPMzJNdkd2Y1h3Q3QwbENzNEo0cnJwRnh2dno4N08xOEVjeU1QTUNlWFVFTi95emNYRnplc2s1L2UydHpEdTFRbmFDdmZDd2VjakI5enRMeGI4N2U4RHY4SUd5ZXdNMFFic0JjendCdW5hRDlUKytMUE92ZVFOdzh6RHN3bnZHNzBBd2diSjdBYnZBdElMekJmaEJQVHBGcmdMeGlJdENjclhETU1YNFFIeEJySzM3aW9pTFFrRjNRRXZGK0VCOU96M3Znekt2Y2ZvODl3aXc4b0h4UlVOeTd6TnV1dkIxd0xmOThxLy9MNGg5TGl4N2lvaUxRenErUXpEdVA0cUs4SUM5QUxGdnJMc0Q5WUY2L0lJNTlUMnZiZjN5dTNCMVJEQXpNdkxBaXJkQ1JjYjdpb2lNTzRGRS9MS3UvenB5OUN6eHcwQnpjemt3ZUR4MEFBTzZOekN6cndJQWMzTTVNRWN6clMzQ2I4aEJMajBBYy9LQnVZUDNBL012Ly9hNzhLN3dBN0p3QzBNNnZ6d0QvNE80ZFlRdjcveTZRc094UFM4RHNXM0FyL2ZEcmU4S0xXOHVPd24xd3pQMnJUYzB3TUF1QXZDQ2JqckJCTzVDTFA5NGhzT3Y3RU16U0l0RE9yNStNUE1DK25wQWJqUnk3UE92ZVFOd3dySHZRZkdGZlBPdC83Q3hkWXRCdUFGd1FDMUt1a0t2ZlFKd3N6TDcrcjg3UzhXRGQzcDlnQVB4Y2pIemVvTjFQTzR6T0VCOU9rV0cvSEN6c2pYODlRQjhQTEJMT0FEdDhiM3h0ek0yQk1SenNPOUFlRHBCZTNJQXVqendmQUMxc2I3QUF6aUd3Ni9zUXpOSWkwTTZ2bk5FTElINGU4RHNzY0RDY2V6NVBIaTdTOFg1T2Zmd3MyNEFzYTV0eVBOSk1iN0FBRXE2USs2Rys0ckl3MFR0UlBLK0FxNUtoZXlEUHduNk52Sjd2UFZ6UFhPQitiV0l3QVB4ZlM3eSs4UXNnTEt5d2ZjM2d1OXN5Y1B6OHZ0RVB6dEx2NG94eHU4QU9zcDV3c0dJTUhuL3NQc3lQRFdFTEViN2l2T3NkSDFFN2tJdS8vbjFla1hHc1hHdk1ybzZ2bk50YjBCMitRSzhMMHJ5TWZON1Evb0dBcTcrdEhQQmN5ejhkVE56ZTRQMUFtejJNamw4QkRiL0FLMXlyS3lCdFlNeDdnckZOOEpzYjRHenI3dUxmUFk4c1cvL09uVEkvTENBc3pLd2RQMC9PMHU5dzNkNmZiMHRRdkt4c25zK01MTXc5RHh2dUQydjhnWXhjTEw3UUxnOGZEeUJkM1ZKZmk0QXMzTHhlMG0yUExIekJ2ZTRCTUd1QTdReDhYdzlydk10cnYrNjl6MHY3d29EN3ZCNmdMWTlyVVg0UVFVQmN2QzhRMjh4K3owN0E3WXNTanYxUW02cy9lMTNBem84ZXdTdzh3SjNzb0d0NzBMd3NheHk4L2c4Y3Jid3U3Z0RyNnpDK2JPc3VUMXd2TEQ3YlR1MUEreXN3cTI0UXpSQnVjSHg4NEo0cnJRenJjUXdzNjIwdXI4OEErNy9kenZ6cnkzOGNMTzF5MEc0LzNVdS83cDd4Tzh1d3pQeXNuWUtSMEpzN0l0SXQ4RnRMSUd6KzdCMXdMbkY3UzdHeFRmQ2JHK0JzNis3aTN6MlBMRnYvenAweVB5d2dMTXlzSFQ5UHp0THZjTjNlbjI5TUVJeXJ5OTZ4SGVMTUd5QWVqVjllNytBckd5MHVqMTFQTFZ2QUhuMVFHenh5MFB4ckh0SmhzQ3c3UU02ZFVsdThnR3RkeXk2QlFwQXMreENPblk5ZGorOThhOXgrVHoxQTdsOHZ6dDBnRzd4UGdxSWpBc0J1ajR0UFFQNk5RUXNzY1hEODYyM0JYWThzZk1HKzdVRDdLekNyYmhEUEQyM1NFUXZBM20yUUd5MXdLMXlyS3k5ZGdYL3J3QjU5VUJzOGN0RDd2QjF3VFUrTWU0S3lqcEJiV3pBckc4TFF6ckhBR3p6djRtMXc2eHVBVEMyd3pvOGV3U3c4d0ozc29HdDcwTHdzYXh5OC9nOGNyYnd1N2dEcjZ6QytiT3N1VDF3dkxEN2JUdTFBK3lzd3EyNFF6UkJ1Y0h4ODRKNHJyUXpyY1F3czYyMHVyODhBKzcvZHp2enJtK0RzWEh4ZGNVNFBqSnV2N3AxeEx5dC9XNjNjSFhBdWNYeExjSDZOd055OXpMenI3TXlNblhBY3krQ2VqQUJjeXo4ZFM5d2JLNzF3M0pzZ25sOENyeXdnSzF6TVhSQXRzbkNzNE40OXdGME1IdUtpTU42UGJoOGd6TkMrSHErYmpreThhNXZiY0c1d1cwN1E3aDFoQy92L0xwQjhuWUQ3ak94THNHN053UTI3Znh3cjNYMXdiQ3dNUzNCK2pjRGN2Y3k3UE9zdUlDNFFYUTNjamM0QXUvdC9XMElpMEp5dGp4dHN6Rzd1QUdzck1wRDg2MjNCWFk4c2ZNRys3VUQ3S3pDcmJoRFBEMjNTRVF2QTNtMlFHeTF3SzF5ckt5OWRnWC9yd0I1OVVCczhjdEQ3dkIxd1RVK01lNEt5anBCYld6QXJHOExRenJIQUd6enY0bTNoQzN4QXEyNHd6bzhld1N3OHdKM3NvR3Q3MEx3c2F4eTgvZzhjcmJ3dTdnRHI2ekMrYk9zdVQxd3ZMRDdiVHUxQSt5c3dxMjRRelJCdWNIeDg0SjRyclF6cmNRd3M2MjB1cjg4QSs3L2R6dnp0RG5CTS9Dc3RjR3RzekQwUEcrNFBhL3lCakZ3c3Z0QXVEeDhQSUYzZFVsK0xnQ3pjdkY3U2JZOHNmTUc5N2dFd2E0RHRESHhmRDJ1OHkydS83cjNQUy92Q2dQdThIcUF0ajJ0UmZoQkJRRnk4THhEY1hLNUFmWUFiYmF5TzNyK2V5MzhjSzkxK2NLM2d6SHMvM0NGUTNMdmlJSnpjSHZBOVFNNDd2KzZlOFR6TGNZKzgzTjdnL1VDYlBZeU56ZzlyMno5OExCNXkzejJBL0h1L3JiOU9rVyt3SzJ1N0l2Q04wTnY3UXdLT0R5eCtnQ3RjcXlzZ1hjQzhxL0JkMnowTFBIQytZQnd1Z04wUVhLMnczZTNQYnR5QUxVODhMc0VOMEZ5OHNpS09rRnpMRUdzOHJPd3MvaEFjMi9EZHJxNlJjYXpzYSt1TmZOM2ZQSjNBL28xQTYwc3lNUHpyYmNGZGp5eDh3Yjd0UVBzck1LdHVFTThQYmRJUkM4RGViWkFiTFhBclhLc3JMMTJCZit2QUhuMVFHenh5MFB1OEhYQk5UNHg3Z3JLT2tGdGJNQ3Nid3RET3NjQWJQTy9pYmVFTGV5Q3NyRjV5MEc0LzNVdS83cDd4Tzh1d3pQeXNuWUtSMEpzN0l0SXQ4RnRMSUd6KzdCMXdMbkY3UzdHeFRmQ2JHK0JzNis3aTN6MlBMRnYvenAweVB5d2dMTXlzSFQ5UHp0TGhiQkdpbkM5QVMzQVFYMkc3SWJLT0h1QmVmcENQSUI5OURGeThMQk1NYjF6Z2ZtMWlPOHZ2TFF1OFBxQk5Rb0Nyb0g2TmJwRnhySDUrL3JJN3NUSGV6YXpDb293c3pNQXRVSHhPNFAzdTB2RmczYjF3RzY5TG9CenJQdUQvenRMcklONHUvQ3U4ZjN0UW41SU1IWTg4bXl5dkRVNlJiN3pjL0l6ZGNFM2ZIQytQN3I0QkN5dlFqN3g3UHVKU1FNeWN6KzNia0Z6Y2NNN2dmRTdnL2U4TFRRQWR6YUV3QzNDY2pReTdmQjdBcmlBTVVsOGV6M3VBdkdJdzByK3Q3NHRNME56aUVRdDdNS0tpTU5Ldy9lRGJTOUNOM2R5c3l4QXMvSHk4SzcyZ2ZQdENzWjFRL015UExqenJmWUVNRE15ckgrM3ZBRXU4RU16Y3d3Q2NyWUFNK3pBZWpVTGJ2QUJNakkwaXYxMGdIS3NnZkxJUXU5dXduaytzenU5ZWZ4NXJ2NzNkWXQ4cjd4NDhqRDdnMzV6Y1BHQWVYVUVMZmZBczNRdys0VkcvTEZ1d2pvMWlNR3VRakt4ZWNVRDk3eXRNc3M3ZXIxc2QvTHlzZk44T3Y1QXNxNzVPN1ZCUmNheHc0TEJpREI1LzdEN01qaDFRbXpHKzRyenJIUjlSTzVDTHNHN05UenQrYkxzODdNN0FMbkRNbmQvdWpnOXJLOUtDb2lNQ3l4STdVSTlMb3FGN0lQQXNVTitRN1dCdDNNOXJNQnp0RENBL1FDdThMWExRYmdCYmJhNFFIeEJjM0FBaW9qQ0NyREU3a0l6UEx0ejlDM3ZnN09JaTBKQnVJS3g3cktGUnNGdExJT3RNTFVMZlBZRE0rLy91aldJOHkrQXJYSHk4THEvUEFQQzdzcUY3SUFBTFh5K3dZdnNSdnp3N0xJSE5nSjNPZkYvZ25CMlFyQ3pNT3pDZHk5NlJjYUM4YkJzaU1GMkFEUHN3SG8xQzNOdThYSHdpMEpCZGdBejdNQjZOUXR6YnZGdGNqTUk3NFRBc1BHQWVYVUVMZmYrTW9pTUN6SjJBRFBzd0hvMUMyN3dBVEl5TklqRDk0TnRMMEkzZDNDdExNSTBNVXc2UFRmQmNJQXRTcmZCY2E3Q3NySHpkRDAzTWJNdnd2bjEreXl2UTYxek16WUp4TUJ2cmNGNGRVSjAvVEtEaU13TExRVHlnYi9EdTNmQWJIZ3hkcmw1Q0hCSDhqbTZ5SXF6eW50MnhVREFjSG1BdUwzdzlQazd0d1B0UFFMMEFuTTdncm5CY1czRU9IdkQ5TDB5ZzRqTU9qMDN3WENBTFVxNFBleHZzWE55c2Z1RGZuNHc4Y0o1c3NPdjdFTTdRY05JZlRoQWIrL0Jyb1p5cnV4RHJlN3diTDEyQ1ArdXdYcDNzSUQ5UGZHeE1YbzhlTEd6TDhMNTlmc0QvUzZBYnpDNkFiajl5N05EZWJaQWJmQ0J0Y0pCQ01FM0FQSjFNb2xHT3dXOGdUUHVRenVDTjRLQ2VjZzVNUzVEZVFORU16SExRamdEYlROQjlvVkNmSDl2N1M1c3RjSkVjYjdBQTN2M0EzWC9ndTE2OHZtRU4vd0R4QzhLaGV5QUFDMTh3a0tFOG5tQWNyeXZPWFVKdXYwdWdIT3dPd1VIUXkwM2dmdjFnNFcrN2NCQmZZanpTdTBDd0RHR1JQM3U3N0w4OGJOeHhZVHVRaXlCK0h2Q2MyOUZRL0hzc0VRMWd2TUZya3FLTUxIc1F2R3U4WFQ5TjBGdHV3TzZQQVB6clVReE1yb0xRL25LTW01QitieDlMdTRDZERodCswUTUvS3ozdnJuejhJRDlQSFB6cmprRVIwTXRONEg3OVlPRnZJTDBMMnkyQ1BlQThuVXpDb293cnUvQnU4SHpOY2ozZ1BKdE9RaEdSQ3h5UEcyNjhIbUF1QXRCdmovN2RYUXU3RUx3cjIzN1NvVHVRaXkvc3pXQjdIQXhjM0t4KzROK2Myc2g0cUpvNEtaaklWMWNVYW9PVk5GZ0VBOGtsdFZpRFJ1ZWttbG00RnhQVWg3TW1wNU9VQ3BQVUZ5Zm1ORXE0YUhpSXFzbzRLWWk0VjJjVWFvT1ZOUGdFQnFrVnRxaHpReWVVbVFtNEVieHNxeC90N3dKQUMzQ2NqUXk3ZkIzZ1BKMU1vbEdPd1dETFlCOWdibys5d1h0TWdOdmhVSnNyc0tLd0wyRTdNVHl2Z1F2Q29Yc2hBQ3plUHcyUEFRNFFRS0Rmem4xdy9kOUxvQi9ManVEZDRudE1nTnZoVUpzcnNLS3dzSkljRXd4clRJRGI0VkNiSzdDaXNDK0NQTkk4WU1ETDRsRzg0UC9QVEd4d3dSRHR3aTB3QzFLdFVQdDhnT3RNaldMUXJkRGNzV3dSb3B3dlFFeFEzNStDUE5JODZ4dXdnb0tRMjMyQklCOWdibys5d1hDcmNJNGRqc3ZNQU00OGJGNi9YZUl3ck1DT2U5MExQSEMrWUorU1AxM1F2aThnSG8xQTBXQThYK0NiM2lEOWo0eDlENzZOejA3TGdMdHNpNDVnelNCZWJ5QWVqVURSYkNBc1hGeTh2MDNRdTB6UDNNNncvczlMb0J2Y3pvODlRV0NyY0k0ZGpzL3JmL3lzYk43UXJneUFnRHl1M1lBZEwrRHMvQ3lRbktFUXpKelA3ZHVmYkl0eEVEQWJQb0R4MEJ4YklKM3VvUTEvUzZBY0xNN0E0VENzZTlCK2J4eWZQOHhjL0lzdGYyc2NiRHhnSGwxQkMzMzhVT0JqQUp0U1RHK3dBTjFOUVR6TXdDMVFmTTd2WG44Y2E3KytmWEF4Yjd0ZlA2QmkreEliVUk5TDBkS2NyZTFSZk95TGpsenlMNHliUUh5eHU5QUFIMzBNWEx3dlhyQWRUeUNPZnY5c3V5QXJUSXl1THJFUjRHQUxVcTcvcTc2TXZQeUxMWDl0RUJ0YkVHNi9ISkR2VEo4UWtLRTdNZ3hnd1B3dC9nRVBJQ0NzcnQwU08rRXd6SnQvN2g2Zy93L2d2UXZiTFlBOWozeWJRTEJCU3lEdlRKOFFrS0U3TVR5dmo0LyszVjBBNi9EdVhlQmlEQjJBRFA3Y2pvMXZiTXh3Zkd2TXZ2QlBrQ3pMRXM1ZHdLekwwa0Q3M003aWNkQ2JPeUxTb293c3krRE9jSHpPNzE1L0hHdS92bjF3TVdBOFgrQ2IzaUQ5ajR4OUQ3Nk56MDdMZ0x0c2k0NWd6U0JlYnlDT2Z2OXN1eUFyVEl5dUxySExZSTlMMGNHODRMQXJjSjYrT3hEdDc0d3ZLNzNOWU9zZEhGL2duMzBSRGZDK1c4Q04zVzlMbTVDTUxyRE8wUTUvS3p2ZzNiMWc2OUd2Zkd6Y3J1S2VJTXljeiszYm55c2VqRi9nbXk3UWJoQmRqeUNPZnY5c3V5QXJUSXl1THJFUUcxc1FiTEdjSUQ5QUxPeXV3dEQ5N3l0TXNNN2VvUHRMSHZDZ3ZNN3ZYbjhlYk04dTNQeFBqRkFzOEh3ZUlQMVBLMXNpRXFLTUt5dmZHMXZzam85TjRLeFFBRzZkb1B0QnJPMlFFRzdSRG44clBleXUzcUQ3VFJ4UTRHTUFuS0tMZ0k5TG9xRjdJSTlNbnhBYlBvRHgyNHk3Y3V2UnU5QUxmL3l0d00wUWJYQ3NuWSsralc5c3pISjdISTBnbktLTVlNRU1vbU1Mcno5TW55QWJQb0R4MjR5N2N1dlJ1OUFMNE15cjNOMGhERHpMYTdEdWJXS3MyK0RMVzlzY0h4M2hJdUQ4b1ZHL205dmdLenlyYlNEOVQ0MUx3STNkYjB1YmtJd3VzTTBRYlhDc25ZKytqVzlzekhKN0hJMGdrRzRBVzIyc29WRy9heXQvZkMyUXpSQnRjS3lkajc2TmIyek1jbnNjalNDY29SQWN1Ly9OQVp5c20zQ3cvT3grMEM1L2ZLMThvVkcvUzd1QW5RNGJmdEVPZnlzOTc2NTgvQ3RMTUkwTVV3TEJEV0Mrd0F4cklienZQOHhiUE93dThRdThhMXNnZmU3L1hlOVBISjBNMnh3ZU1MMUFERkpmSHNEZ1BGL2duQjJRckM4c0M3SGlqZEQ3Szk3d3IrOFJIQkg3SHpEc29tTUxVTy9DZm8yOG51ODlYTTljNEg1dFlqQUEvRjlMdkw3eEN5OHNDN0hpamREN0s5N3dQdjVNN0JLY2JmMURBc0c3MEF5UDNHM1F6bEVOMExMcndHNTdrTnY3engwUEFNMXcvZUpBcXovZWpBd2dQMDhjL0k1QzBIM2d6SkZzRWdLY0wwQk1VTisvMGp6U1BPc2JzSUtDa050OWdTQWZZRzZQdmNGd3E2QitqVzdQY0h4UTM1QmkrM0k3VUk5TG9pN2dXeS9yZk93dUs0d1RER3lyRUIzdFR6c2VUTHg4ak03dXNjdHZZQXhob3B3dlFFdmZJQjZNWVQ0QXUydXNnYjZRKzB2U2dCOWdZUzg5NEt5ZDBPNlBBUHpyVVF4TXJvTFFmZURNa1cvTzNWQ2IvSUM5RHNzdTBHNXd6SjNjb1ZHL2F5dC9mQzJRemxFTjBMTHY0UTU5VVAvdlM2QWM3SjVDOGRCTW15QndRVXhMSzk4YlcrNk5mNTJCSUcrUC90MWRDN3NRdkN2YmZ0S2hPNUNMb0g2TmJDdExNSTBNVXdMQS9lOHJUTExDcmdEcm0xRE5VSnZlOG5HOGJpMFNqSEc4M3pHdS8wK2dZZ3dkZ0F6KzMrMHVBVzhyZ0N4cm0zQ2Nvb3NmWUF4aDB3dEFBQXN2YjdEc0Vvd1FuSnpoQW9LdlN4d0F6a0Nma2p0T0VMekxFcjN1TUY3UDRCeHM2MjB1c1J0UVlBdFNyditydm95OFhPd2RQMCtRTE1zU3psM0FyTXZTUVB2Y3p1SngwSnM3SXRLaWpDekw0TTV3ZkM2QWJqOXk3M3dCd2J6aEQweWZQOUJpK3hHL1BEc3NnYzJBbmM1OFgrQ2NIWkNzTE14THNOMnVyczl3ZTRBUVgySTgwbHR2Y0F4aG9UOTd1K3kvUEd6Y2NXRTdrSXNnZmg3d25OdlJVUHpjSG84ZUx3RHhDN0toZXlEZlRKOGZ3T3dTakJDY25PRUNncTlMSEFET1FKK1NPMDRRdk1zU3Z1MWZXeHdnVE16TVhCejljQnc5RDdCT2tGc3JzR3RjZkx3dlhkQWJTeUI4c2J2UURJQzhhN3hiUFAxd0hEMFBzRUdRYTd0L1cwQ3dZZ3dkZ0p4OUxJN3VBRjBNSHZDZ3ZLNkFQVUtyVElEYjRaeXNtM0N3L094KzBDNS9mSzE4b1ZHd2E3dC9XMENjcmtCTjRLTHJRTjdOd3VBTmdpNXRuWEk4NGc4QzRNdVNvb3dydktEdFM5dnVnVkhRSEt0d1VFRkxVTEFzVU4vdkVSd1IreDh3N0N6TDRVczczM3h3ZjMwUkRmQytVQXRTb3E5TEhBRE9TOXZ1Z1ZIUUhLdHdVRUdjMys5TG9CdmI3b0ZSMEJ5cmNGQk44T3NkSUt3c0d5N2lnZDhzcXhNQ2pZOWJMWHhmNEpzdTBRdGN6RHNnSGw4Y2tLQXNVTitRWXZzeWZHREJEQzMrQVE4Z0lLeXUzUkk3NFRBYjYzR3lqZ0VMZS83d3IrOXlQTkk4WU1DTDBxRjdMNHhRTFBCL2p3Q3JjUkNBUEs2TllKekx2NDBOa002QS9jQ1M3M3Vod2J6aEFDeFEzNTlDc2p0aGpMc2Z6d0ZiUE92UW5RN0FZZ3dTTDR5YlFIeTk4UXk3MzN5TVRINUNNZEFjcTNCUVRwQmJLN0JyWEh5OEwxM1FHMHNnZkxHNzBBeUF2R3U4V3p6OWdNejdQa0xPQVF0Ny9IQWZZRzZBN1VMQXE3Q09IWTdQZnlDOUM5c3RnajUvN0Q3TXdpN2dXeS9nTEV4OFhYOU4wdENBUEs3ZFVKcy9RSndzekw3K3NjeVJBQUNPZnY5c3ZTeGRUZTdNd3VFOGtMRnVRZUxNSUQ5QUs3d3RmWCtkZ1NDczM5NXV2czl3ZXk4d2tLR0xZaHhnd0x2UndUSk5uaUN0Qzd4QzIwNFF2TXNTc3FLTUlOd2d6TnlPZlgrZGdTQ3MzOTV1dnMvdm5IQWZZRzEvbllFZ3JOL2VicjdMekFET1BHeGV2MTNpTUt6QWpudmRDenh3dm1DZmtqOWQwTDR2TDczZGZ5RnZ1ejh3a0tFOEVmdVBRQXhob1Q5N3UreS9QR3pjY1dFN2tJdS9UaHl0RE54d214SXcwWXdSKzJDUFN5SFJ2T0VQejB4c2NNRVE3Y0l0TUF0U3JWRDdmSURyVEkxaTMwNkFxNEZzRWFLY0wwQkxjQkJmWVZ5YkVqMXJNSDNOM1FEY0lNemNqbkk3NFR0N2F4QnVlNkJyTEhETFBReitJQ3NjeTF5d2JhOGZTN3ZnN0N2Y3p1Sk9jTXc4d0k1N3JDQS9UeHo4NjQ1QkVkOTdPMCtnUVo4OHZBOVFNSitTTUc0QVhxOHZ2ZDEvSVcrOGZQeUxMWDlySHl3THNlTEJQM3U3N0x4c3pNNVBYaURPOEF0U3JxOWJURXhjM0t4KzROK2MwTitNcm8xdmJNeHljQjNOSFBFUlBKQ3hia0dTekNBL1FDdThMWDEvbllFZ3F5LytmZjdQY0hzdk1KQ2hpMkljWU1DNzBjRXlUWjRnclF1OFF0dE9FTHpMRXJLaWpDRGNJTXpjam4xL25ZRWdxeS8rZmY3UDdlRlBEdENDTytFL0xBdXg0bzFmZXh1Ty9GeGN2QkR0UU90TEV2S084UXNkYkx6cjdNeU1Fd3hyU3lCOUFWRU1tOUFTc0M5QkhCSDdZSTlMd2VHODRRL1BUR3h3d1JEdHdpMHdDMUt1RDh0K0hMejhETDUrc2NzZlVBeGhvYnpoQUR4UTM1RHRZRzNjejJzd0hPME1JRDlBdlF3ckxzOU40V0NyTC81OS9zOXdTeEFRWDJGOEVmdHZUNExNL0pEYkhDQXcvOHVPNE4zaWNJQThvYjZRKzB2U2pGeDdIdTg5WVB4YjhzS05YM3NianZzODdNN0FMbkRNbmQvdWpnOXJLOUtBSDJCdGNQMlBqSDhNam83Zys4R3NmUHdNdm53eE81Q0xzRjZiWFFzc1VNeFNNTklRL2U4clRMTE43akJlenl6YmpPekMwRzBnekh6UHZvdE1JRDlBdTR5TUlqRGRRSHliVGs2TmIyek1jbkFlZlR6aVVUeVFzVzVCd3N3Z1AwQXJ2QzE5ZjUyQklLMFAwRUdSTHI4c1grQ2JMYkJzZk11TXZrN3RjUDNyOEd5YjNMeHMvbkRNbmF5T1h3RU52MHVnRzl6TzRuSGZhekZzRWdLY0wwQk1VTisvSWp6U1BPc2JzSUtDa050OWdTQWZZRzZQdmNGd3JRL1FRVXRRQUF0UUVGOWhUQkg3WVF5UTNvRmJTenV5SFdDZmtqRDk0TnRMZjc1OHZRME1mdkN2N3hFY0Vmc2ZNT3lpWXd0UTc4SitqYnllN3oxY3oxemdmbTFpTUFEOFgwdTh2dkVMTHl3THNlS092MUZ2dTE5UWtLRTdVVHl2Z013c3krRkxPOTk4Y0g5OUVRM3d2bEFMVXFLdlN4d0F6a3pjellFT0VEemIwSnpCWHl5eHIzeHNmTjVQWGRDK1hNQ08zdkVMSFJ4ZjRKc3UwRzRRWFk4dnJkOGNUUXg4Y0I5Z2JvRHRRc0N0RDlCQlRFc3IzeHRiN28xL25ZRWdiNC8rM1YwTHV4QzhLOXQrMHFFN2tJMFAwcTF3Rzl2UWtyeDh2WDllZ29DUEFkS2hqTkZock85dndKSTgwa3hnd1F5aVlzeXNtM0N3Lzd5ZXdseU1iN0FBM1UxQlB5d2dMUHdzWFhEOTRudExJTjN0VVAzUnJPOXZ3R0w3RVR5dmdBeGhvVDk3dSt5L1BHemNjV0U3a0lzZ2ZoN3duTnZSVVB1OEh0Q3RUeXlyRXIzdFVGekw0TTVDUDFJNzRUL2NXeURkemM4czIrQnJQZHd1MzIzdmpCdFF2cHVkRE90d3ZLeXJMdEVMTHl5cnYrNk5ZakZyY0t3cnZrSTc0VDhzcTcvT25MME02M0M4cktzdTBRc3ZMS3UvN28xaU1XOHZmR3g4M2s5ZDBMNWN3STdlOFFzZEhIQWZZRzZBN1VMQXJPRGVqVUFjeStET1M5ek9qMTNRdmxGc0VzNEEyL3dpTURBYlBvRHgwQnhiSUozdW9RMS9TNkFidkI3UXJVOHNxeEs5N1ZCY3krRE9RSnl1UUUzZ291OTBXU1cycUlORjk1U1hXYmdZMCtTSTR5YXFBNlFIVTlRYWw5WTFxcmhvdUlpb0trZ3BXTWhadHhScFE1VTBlQVFFT1NXek9JTkU5NVNRNGo4OWdDekxFaUt1OFF1OGdMME93R01NNzU4TFM2RGNZVjlySzNDcy9RemU4aXkvTEF1eDRvMlBXeTE4WCtDYkx0QnVBTXdiY0d5Y1AyeUxjUkQ4WEI0UUsvOHNDN0hnUXFzUUFQeGNhenpiTDE2d0hVOGdidDJRSFV5UDNHM1RBc3RpaTRDUFM5SFNuQzlBZXk4d0hveGhQZ0M3YTZ5QnZwRDdTOUtBSDJCaEx6M2dySjNmN1M0QmJ5d0FMRHl1clgrZGdTTHY0UnhyM0MzdWN0QWQzdHNpckR5QWdEeXQ3akJleitDY2JMeGMvMTZ3SFVGZzdtMWlTenN3MjF5T010OWQwTDR2SUYzZFVsQUEvRnRjZkx4Yy9mQWNhL0p0N2pCZXdhenZuN0JpK3hFOHI0RUxrcUY3TDR4UUxQQi9qd0NyY1JDQVBLN2VFSjdmNEp4c3ZGei9YckFkUVd3UjBiemhEMHlmSDZCaSt4Ry9QRHNzZ2MyQW5jNThYK0NjenVDdWNOdGJFYUtOY0Z2ck1wdGJIQnQrc2t4dnNBOGV2VkJjNno5YlRIeGRFVjF3eXpzZnp2MGdPLzBzdk56c2prTGVmK3cremtJVEMxRHZUSjl2NzRJODBvc2ZiNExNL0pEYkhDQXcvOHVPNE4zaWNJQThvYjZRKzB2U2pGeDdIdTg5WVB4YjhzS05jRnZyTXB0YkhCdCt2WUNjZk9NQ29vd3N5K0FyUEsxaTBOMkFqSDFQN1M0QllXKzhmTnpzamtMZWYrdyt6TUl1NEZzdjRDeE1mRjEvVGRMUWdEeXViZ0JML2c4Ym5PMGlNTjFBZkp0T1FoeEM3YTlDZlc0UWEzS3NJdDJQaks3ZGYydCtqRkRnWXdDUWJnQmJiYXloVWI5ckszOThMWkRPZ00zdmkwN1FqaDNDMFdCOHZ5Q2ZrajlPSUJ5clVMNGRNVzhyY1EwTHV5c2cvY0Jlc1d3Um9yc1FBQXRmSDZCaSsyS0xnUTNpKzgyQS9PdHN2MHU4dnZFTExHK3dEODU5Y1AzZjRDek1pNDF4VGREY2ZUNUNFWkJiVzk5N1hjN2JqREcvUERzc2p0MmhDL3lQalA0Z1lnd2RnUHljNyt1OVVKdjkvRnpjckg3ZzM1OE1PekNkeTl3Z1AwOGMvT3VPUVJIZmpEc3Z6bnVoQzNzeW9yQXZZVXdSKzJFTWtONkJVTnQ5Z1NBZllHMHZiY0FzZnUvTzNWOUxIUnk3UE96TkVRc2d6UHZ5VUVGTVRPdHd1enlPZk1GaEhPc2JzSUtPQURzclB4dE1mdEk3NFQrTU95L09lNkVMZXpLZ0hGeGVJUTMvQXV1d1hwNlNnQUQ4VzF4OEhSQXNQTXRMSU40ZDhCenRVTzFzZk41Qzc1c2ZRQXRTclZEN2ZJQnJYSTJDMzEzUUhQdkFuY3ZnbnJ2ZzdDNWpBcy92bk5Ed3ZLSmpEQzlBU3hDZXZqc1E3ZStNTHl1OXpXRHJIUnhRMzZEdFlHM2N5MHNnSG42L203MlFMRXg4SFk4dGdYdHJFRzU3ckNBUFRGS3dVTkxMRWh4Z3dRdkNvWHNnZ0R6ZVB3MlBBUTRRUUtEZnpuMXcvZDlNbnhBYlBvRHgzeXlyY0gydVFGMWJjSXo4NngxQWJDK01tMEI4c2J3Z0QwNzd3QnMrZ1BIUUhGc2czZDdBWHR3Z3pOeU9janZoUDR5YlFIeXhYMnNyY094Y3E0eGdySURNKy9KUVFVeE15K0Fzck54ZEVvdkJFRytQL3QxZEM3c1F2Q3ZiZnRLaE81Q013STdkUUd2OElreXQ3TTdBTEF4c3kvQytmWDdMbStEczJ5c3JMQkZjYTBzZzNoM3dITzFjWEd4c1hSSnhNTXo3OGxLaGpORmhvQ3RydXlJNzRUQWN5K0NlL2VBYzdZeThiR3hkRW4rUUd6enY0cUtNSzd4ZzYxek9VdEJ1QUZ0dHJrSVN1eUQvVEo4UWtLRTdJaHhnd1F3dC9nRVBJQ0NzcnQwU08rRXdHK3R4c280QTIvd2lNckF2WWp6U3UzQ2hES0ppdkM5QVBMOFFHejZBOGR1TXUzTHIwYnZRQytETXE5emRJUXc4ekRzd25jdmV6M0JMWHlDUW9Uc1NUR0RBdTlIQk1rMmVJSzBMdkVMYlRoQzh5eEt5b293ZzNDRE0zSTU5RUcxL2pKM3NqdDJBSE8xdThLK2ZnanpTTzRDUFM2SEJNazJlSUswTHZFTGJUaEM4eXhLeW9vd2czQ0RNM0k1K2NQNkF1MnVRUHIzQ1R5dHdyQ3UrUUpEOXdGeXdDMUt1OFF1OElHMFFmQjhBTGhKQzczek8zWUFjN1d4d25Bd2UzUDJBZkt2LzdiMVNrQUQ4WEd4c1hSSnhNS3g3MEg1dkhKdTc4Q3lkMEc2UFhjRHRIekR1M0p3dDduTFFIZDdiSXF3ODRJdXdYcDZTZ0F2ZzdDNWdZd3p2bnd3ODBHNmQzQ0EvUUx1TXEyc2crKzhzUE5EYndWRUxlekNpdlF6T3dOMFEzVjh2em4xUGkvdkFManNjSG5EN3dnQ3JQOTZNRENBL1QzME1LMDVBbllLTUM3RHVpMEhQSytEc0xHTUN6RDNQSGh1L3pudXNUNHR3akt2N2pvRk9jQjRRWU41ZHdIQUEvRnRjZkIwUUxEek1xM0NlWHh4TmZuSkxyRjVPSDJ1L0xQelFHNkdjSUQ5QUxPeXV3dEQ5d0Z5eGJCTE5UMTJiNEN4cnZIc3NNYjg4T3l5TzNhRUwvSStNL2lCaURCM1EzSHM4cm0zQU94d08reHZyTG9GQk10MDluS0pSanNGcmdMeGlQTTBmYm5BYllBeWlvYjdQY0J4UTBMZzV1QmZEMUllekpxZkRsQXFUMUJyWDFqV3F1R2Q0aUtxNk9Dcll5RmVYRkdoemxUeUFqMHpIR2pnbk9NaFhoeFJuZzVVMlovUUcrU1cybUhORzE1U2FXY2dSSE93N2tKMitvRjAvVEZBUWt3N1FiYjhnajN6TUhRSjhmQUk4Tys3dGNLNGczWS9zTHUxd200MGZHMHU4M0ZCZDBONGdiQkxOVDEyYmYzME93SUt3YlNEYkxPRGJ2dkJka0tBczdLd3lNSDNQQVBzdjI4R3cyL3hCZ093ckx0SWh2R3lyRUIzdkFEdTh3Q0FlTFJJd2JuQmNXM0J0cndCZ0RJQzhhL3dkRVJFOGtMRnVUdTFRVVcrL29CQ1FZajZ5akd0ckhLN2RnSjdQUzZBY2ZMN1BYVStMUGN5aW9id2dEMHhRRWpDdGY1MkJJSUE4cmU0d1hzOU1VQkNRWWp3UlB3RExzRzN0UVdBQS9GeHNXeTdCVVR4Z2dBeWlvYndoYkp4UTBMek80SzV3WEZ0eERoN3cvU3VBdkczQWdyQnVFTDVjd051eUVKeTlYM3hyMjQ1UFhDeGdnQXlnUVVCYk83RVFFRnN0c0d4OFlNdXdiZTFCYjR0d1RDdkxmb0xoTU15YmYrNjlYMXV2UUp3c3pMNyt2aEFiaTBEZUliRUxHNzhjTE16ZVVLNXd2S0FQL24weE1BLzhvckk3am8rdFFLMkxRSjY5WXU4c0gzeHJMRjd4RVR1UWpPRGRIY0R2RDBDY0xNeSsvckhNakR2UUhnNlFYdHZ2TFRDdzdvQk56MHRyc2IzdUFuQnJjS3d0QUdJTUhZQjgvSy9PM0tFTXZpeGMzS3grNE4rYzBHdC8zUDZRWE13Z2ExM0FnckJ0SU5zczROdSs4RjJRb0N6c3JESTc0VERiUFovTzN2OUwvSUdBSEZ4ZUlRMy9BUC92dmM0UG0vd0JVREFjSGlDdVg0dyszKzdiNjh1NzhHeUFuNUkvVGhBYisvQnJvYkRyK3hETTBqdCtnRTNQUzJ1eHNxR00wV0docmVJN2Z2RU9IeXlyRUxLdDhGdThUNEFjR3k3UGdUL2JTM0J1blZEN2ZJQ00rK3hDUDYzeVFJODhvcUc4SVd2Z3kxdmJIaHdSd2VFQUFOMjlZTzNmVEtBUWtHSSt2bitNblErdDNxd3ZmNXhRY0p5K1lRdjg0SXUvVGgyQW5Jc3lvQkNBWXN6aHZHdzhZQjVkUVF0OS9GRGdrR0k4SDVEOFc3QXVzYktldlZ4Y2E5eGVJSzMvYXozTVhoN3hEZjlNb0JDUVlqNnluM3c4NzkzdHdGMnZURkFRa3dMQWJnQWREc3l1M3ZDYmpseFFjSnd1Z1RHOGEwMEFIYzJoTUF5d25uQ1Frakk4Z3VDT3dodTdRU0FQVEZBU1BmdXM0Zw=="
+local __LC_LAYERS = {"xor", "caesar", "reverse", "base64"}
 
--- Show notification helper
-local function Message(Title, Text, Time)
-    StarterGui:SetCore("SendNotification", {
-        Title = Title,
-        Text = Text,
-        Duration = Time or 5
-    })
+local function __lc_bxor(a, b)
+  local r, m = 0, 1
+  for _ = 0, 7 do
+    local x, y = a % 2, b % 2
+    if x ~= y then r = r + m end
+    a, b, m = math.floor(a / 2), math.floor(b / 2), m * 2
+  end
+  return r
 end
 
--- Prevent duplicate UI execution (Anti-Spam Run)
-if game:GetService("CoreGui"):FindFirstChild("PisitHubFlyGUI") then
-    Message("แจ้งเตือน", "คุณรันไปแล้ว", 3)
-    return
+local function __lc_xor(data, key)
+  local out, keyLength = {}, #key
+  if keyLength == 0 then return data end
+  for index = 1, #data do
+    out[index] = string.char(__lc_bxor(
+      string.byte(data, index),
+      string.byte(key, ((index - 1) % keyLength) + 1)
+    ))
+  end
+  return table.concat(out)
 end
 
--- GUI Setup
-local main = Instance.new("ScreenGui")
-main.Name = "PisitHubFlyGUI"
-main.Parent = game:GetService("CoreGui")
-main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-main.ResetOnSpawn = false
-
--- Main Frame (PISIT HUB Red-White Theme)
-local Frame = Instance.new("Frame")
-Frame.Parent = main
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Frame.BorderColor3 = Color3.fromRGB(255, 100, 100)
-Frame.Position = UDim2.new(0.1, 0, 0.38, 0)
-Frame.Size = UDim2.new(0, 210, 0, 100)
-Frame.Active = true
-Frame.Draggable = true
-
--- Main Frame Gradient & Styling
-local MainUiGradient = Instance.new("UIGradient")
-MainUiGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 20, 20)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 5, 5))
-})
-MainUiGradient.Rotation = 45
-MainUiGradient.Parent = Frame
-
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
-MainCorner.Parent = Frame
-
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(255, 100, 100)
-MainStroke.Thickness = 1.5
-MainStroke.Parent = Frame
-
--- Title (PISIT HUB FLY)
-local TextLabel = Instance.new("TextLabel")
-TextLabel.Parent = Frame
-TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel.BackgroundTransparency = 1
-TextLabel.Position = UDim2.new(0, 10, 0, 5)
-TextLabel.Size = UDim2.new(0, 100, 0, 28)
-TextLabel.Font = Enum.Font.GothamBold
-TextLabel.Text = "PISIT HUB FLY"
-TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel.TextSize = 13
-TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-
--- Content Holder (สำหรับซ่อนเวลาพับจอ)
-local ContentContainer = Instance.new("Frame")
-ContentContainer.Name = "ContentContainer"
-ContentContainer.Parent = Frame
-ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 0, 0, 35)
-ContentContainer.Size = UDim2.new(1, 0, 1, -35)
-
--- UP Button
-local up = Instance.new("TextButton")
-up.Name = "up"
-up.Parent = ContentContainer
-up.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-up.TextColor3 = Color3.fromRGB(255, 255, 255)
-up.Position = UDim2.new(0, 10, 0, 5)
-up.Size = UDim2.new(0, 42, 0, 26)
-up.Font = Enum.Font.GothamBold
-up.Text = "UP"
-up.TextSize = 12
-
--- DOWN Button
-local down = Instance.new("TextButton")
-down.Name = "down"
-down.Parent = ContentContainer
-down.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-down.Position = UDim2.new(0, 10, 0, 35)
-down.Size = UDim2.new(0, 42, 0, 26)
-down.Font = Enum.Font.GothamBold
-down.Text = "DOWN"
-down.TextColor3 = Color3.fromRGB(255, 255, 255)
-down.TextSize = 11
-
--- PLUS Button (+)
-local plus = Instance.new("TextButton")
-plus.Name = "plus"
-plus.Parent = ContentContainer
-plus.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
-plus.Position = UDim2.new(0, 58, 0, 5)
-plus.Size = UDim2.new(0, 42, 0, 26)
-plus.Font = Enum.Font.GothamBold
-plus.Text = "+"
-plus.TextColor3 = Color3.fromRGB(255, 255, 255)
-plus.TextSize = 14
-
--- MINUS Button (-)
-local mine = Instance.new("TextButton")
-mine.Name = "mine"
-mine.Parent = ContentContainer
-mine.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
-mine.Position = UDim2.new(0, 58, 0, 35)
-mine.Size = UDim2.new(0, 42, 0, 26)
-mine.Font = Enum.Font.GothamBold
-mine.Text = "-"
-mine.TextColor3 = Color3.fromRGB(255, 255, 255)
-mine.TextSize = 14
-
--- SPEED Label
-local speed = Instance.new("TextLabel")
-speed.Name = "speed"
-speed.Parent = ContentContainer
-speed.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-speed.Position = UDim2.new(0, 106, 0, 35)
-speed.Size = UDim2.new(0, 42, 0, 26)
-speed.Font = Enum.Font.GothamBold
-speed.Text = "1"
-speed.TextColor3 = Color3.fromRGB(255, 255, 255)
-speed.TextSize = 13
-
--- ONOF (Fly Toggle Button)
-local onof = Instance.new("TextButton")
-onof.Name = "onof"
-onof.Parent = ContentContainer
-onof.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
-onof.Position = UDim2.new(0, 106, 0, 5)
-onof.Size = UDim2.new(0, 92, 0, 26)
-onof.Font = Enum.Font.GothamBold
-onof.Text = "FLY : OFF"
-onof.TextColor3 = Color3.fromRGB(255, 255, 255)
-onof.TextSize = 12
-
--- Top Right Buttons Holder (-, X, Logo)
-local TopButtonsHolder = Instance.new("Frame")
-TopButtonsHolder.Parent = Frame
-TopButtonsHolder.BackgroundTransparency = 1
-TopButtonsHolder.Position = UDim2.new(1, -85, 0, 5)
-TopButtonsHolder.Size = UDim2.new(0, 80, 0, 25)
-
--- Close Button (X)
-local closebutton = Instance.new("TextButton")
-closebutton.Name = "Close"
-closebutton.Parent = TopButtonsHolder
-closebutton.BackgroundColor3 = Color3.fromRGB(225, 25, 0)
-closebutton.BackgroundTransparency = 1
-closebutton.Font = Enum.Font.GothamBold
-closebutton.Size = UDim2.new(0, 20, 0, 20)
-closebutton.Position = UDim2.new(1, -20, 0, 2)
-closebutton.Text = "X"
-closebutton.TextColor3 = Color3.fromRGB(255, 120, 120)
-closebutton.TextSize = 14
-
--- Minimize Button (-)
-local mini = Instance.new("TextButton")
-mini.Name = "minimize"
-mini.Parent = TopButtonsHolder
-mini.BackgroundTransparency = 1
-mini.Font = Enum.Font.GothamBold
-mini.Size = UDim2.new(0, 20, 0, 20)
-mini.Position = UDim2.new(1, -44, 0, 2)
-mini.Text = "-"
-mini.TextColor3 = Color3.fromRGB(200, 200, 200)
-mini.TextSize = 18
-
--- Logo Toggle Button (สี่เหลี่ยมรูปโลโก้ตามลิงก์)
-local logoBtn = Instance.new("ImageButton")
-logoBtn.Name = "LogoButton"
-logoBtn.Parent = TopButtonsHolder
-logoBtn.BackgroundTransparency = 1
-logoBtn.Position = UDim2.new(1, -68, 0, 2)
-logoBtn.Size = UDim2.new(0, 20, 0, 20)
-logoBtn.Image = "https://i.postimg.cc/hP39YjVY/logo.png"
-
--- Logic & Variables
-speeds = 1
-local speaker = game:GetService("Players").LocalPlayer
-local nowe = false
-
--- Notification on load
-Message("PISIT HUB", "FLY Loaded!", 3)
-
--- Minimize Function
-local isMinimized = false
-local function ToggleMinimize()
-	isMinimized = not isMinimized
-	if isMinimized then
-		Frame.Size = UDim2.new(0, 210, 0, 35)
-		ContentContainer.Visible = false
-		mini.Text = "+"
-	else
-		Frame.Size = UDim2.new(0, 210, 0, 100)
-		ContentContainer.Visible = true
-		mini.Text = "-"
-	end
+local function __lc_caesar_inv(data, key)
+  local shift = 0
+  for index = 1, #key do
+    shift = (shift + string.byte(key, index)) % 256
+  end
+  local out = {}
+  for index = 1, #data do
+    out[index] = string.char((string.byte(data, index) + shift) % 256)
+  end
+  return table.concat(out)
 end
 
-mini.MouseButton1Click:Connect(ToggleMinimize)
-logoBtn.MouseButton1Click:Connect(ToggleMinimize)
+local function __lc_reverse(data)
+  return string.reverse(data)
+end
 
-closebutton.MouseButton1Click:Connect(function()
-	main:Destroy()
-end)
+local function __lc_rotate_inv(data, key)
+  local amount = 0
+  for index = 1, #key do
+    amount = (amount + string.byte(key, index)) % math.max(#data, 1)
+  end
+  if #data == 0 or amount == 0 then return data end
+  amount = amount % #data
+  return string.sub(data, #data - amount + 1) .. string.sub(data, 1, #data - amount)
+end
 
--- Fly Toggle Script
-onof.MouseButton1Down:connect(function()
-	if nowe == true then
-		nowe = false
-		onof.Text = "FLY : OFF"
-		onof.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+local __lc_b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local __lc_b64lookup = {}
+for index = 1, #__lc_b64chars do
+  __lc_b64lookup[string.sub(__lc_b64chars, index, index)] = index - 1
+end
 
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,true)
-		speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
-	else 
-		nowe = true
-		onof.Text = "FLY : ON"
-		onof.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
+local function __lc_b64dec(data)
+  data = string.gsub(data, "[^" .. __lc_b64chars .. "=]", "")
+  local out = {}
+  local buffer, bits = 0, 0
+  for index = 1, #data do
+    local char = string.sub(data, index, index)
+    if char == "=" then break end
+    local value = __lc_b64lookup[char]
+    if value == nil then
+      error("Invalid Base64 payload", 0)
+    end
+    buffer = buffer * 64 + value
+    bits = bits + 6
+    if bits >= 8 then
+      bits = bits - 8
+      local byte = math.floor(buffer / (2 ^ bits))
+      buffer = buffer % (2 ^ bits)
+      out[#out + 1] = string.char(byte)
+    end
+  end
+  return table.concat(out)
+end
 
-		for i = 1, speeds do
-			spawn(function()
-				local hb = game:GetService("RunService").Heartbeat	
-				tpwalking = true
-				local chr = game.Players.LocalPlayer.Character
-				local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-				while tpwalking and hb:Wait() and chr and hum and hum.Parent do
-					if hum.MoveDirection.Magnitude > 0 then
-						chr:TranslateBy(hum.MoveDirection)
-					end
-				end
-			end)
-		end
-		
-		local Char = game.Players.LocalPlayer.Character
-		if Char:FindFirstChild("Animate") then
-			Char.Animate.Disabled = true
-		end
-		local Hum = Char:FindFirstChildOfClass("Humanoid") or Char:FindFirstChildOfClass("AnimationController")
+local __lc_ops = {
+  xor = function(data, key) return __lc_xor(data, key) end,
+  caesar = function(data, key) return __lc_caesar_inv(data, key) end,
+  reverse = function(data) return __lc_reverse(data) end,
+  rotate = function(data, key) return __lc_rotate_inv(data, key) end,
+  base64 = function(data) return __lc_b64dec(data) end,
+}
 
-		for i,v in next, Hum:GetPlayingAnimationTracks() do
-			v:AdjustSpeed(0)
-		end
-		
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,false)
-		speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
-	end
+local function __lc_decrypt(payload, key, layers)
+  local data = payload
+  for index = #layers, 1, -1 do
+    local layer = layers[index]
+    local op = __lc_ops[layer]
+    if not op then
+      error("Unsupported encryption layer: " .. tostring(layer), 0)
+    end
+    if layer == "reverse" then
+      data = op(data)
+    elseif layer == "base64" then
+      data = op(data)
+    else
+      data = op(data, key)
+    end
+  end
+  return data
+end
 
-	if game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid").RigType == Enum.HumanoidRigType.R6 then
-		local plr = game.Players.LocalPlayer
-		local torso = plr.Character:FindFirstChild("Torso")
-		if not torso then return end
-		local bg = Instance.new("BodyGyro", torso)
-		bg.P = 9e4
-		bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-		bg.cframe = torso.CFrame
-		local bv = Instance.new("BodyVelocity", torso)
-		bv.velocity = Vector3.new(0,0.1,0)
-		bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-		if nowe == true then
-			plr.Character.Humanoid.PlatformStand = true
-		end
-		
-		local ctrl = {f = 0, b = 0, l = 0, r = 0}
-		local lastctrl = {f = 0, b = 0, l = 0, r = 0}
-		local maxspeed = 50
-		local flyspeed = 0
+local function __lc_b64(payload)
+  local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  local lookup = {}
+  for index = 1, #chars do
+    lookup[string.sub(chars, index, index)] = index - 1
+  end
+  payload = string.gsub(payload, "[^" .. chars .. "=]", "")
+  local out, buffer, bits = {}, 0, 0
+  for index = 1, #payload do
+    local char = string.sub(payload, index, index)
+    if char == "=" then break end
+    local value = lookup[char]
+    if value == nil then
+      error("Invalid encrypted payload", 0)
+    end
+    buffer = buffer * 64 + value
+    bits = bits + 6
+    if bits >= 8 then
+      bits = bits - 8
+      local byte = math.floor(buffer / (2 ^ bits))
+      buffer = buffer % (2 ^ bits)
+      out[#out + 1] = string.char(byte)
+    end
+  end
+  return table.concat(out)
+end
 
-		while nowe == true or game:GetService("Players").LocalPlayer.Character.Humanoid.Health == 0 do
-			game:GetService("RunService").RenderStepped:Wait()
-			if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
-				flyspeed = flyspeed + .5 + (flyspeed / maxspeed)
-				if flyspeed > maxspeed then flyspeed = maxspeed end
-			elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and flyspeed ~= 0 then
-				flyspeed = flyspeed - 1
-				if flyspeed < 0 then flyspeed = 0 end
-			end
-			bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame
-		end
-		bg:Destroy()
-		bv:Destroy()
-		plr.Character.Humanoid.PlatformStand = false
-		if plr.Character:FindFirstChild("Animate") then
-			plr.Character.Animate.Disabled = false
-		end
-		tpwalking = false
-	else
-		local plr = game.Players.LocalPlayer
-		local UpperTorso = plr.Character:FindFirstChild("UpperTorso")
-		if not UpperTorso then return end
-		local bg = Instance.new("BodyGyro", UpperTorso)
-		bg.P = 9e4
-		bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-		bg.cframe = UpperTorso.CFrame
-		local bv = Instance.new("BodyVelocity", UpperTorso)
-		bv.velocity = Vector3.new(0,0.1,0)
-		bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-		if nowe == true then
-			plr.Character.Humanoid.PlatformStand = true
-		end
-		
-		while nowe == true or game:GetService("Players").LocalPlayer.Character.Humanoid.Health == 0 do
-			task.wait()
-		end
-		bg:Destroy()
-		bv:Destroy()
-		plr.Character.Humanoid.PlatformStand = false
-		if plr.Character:FindFirstChild("Animate") then
-			plr.Character.Animate.Disabled = false
-		end
-		tpwalking = false
-	end
-end)
-
--- UP / DOWN Buttons Movement
-local tis
-up.MouseButton1Down:connect(function()
-	tis = up.MouseEnter:connect(function()
-		while tis do
-			task.wait()
-			local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				hrp.CFrame = hrp.CFrame * CFrame.new(0, 1, 0)
-			end
-		end
-	end)
-end)
-
-up.MouseLeave:connect(function()
-	if tis then
-		tis:Disconnect()
-		tis = nil
-	end
-end)
-
-local dis
-down.MouseButton1Down:connect(function()
-	dis = down.MouseEnter:connect(function()
-		while dis do
-			task.wait()
-			local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				hrp.CFrame = hrp.CFrame * CFrame.new(0, -1, 0)
-			end
-		end
-	end)
-end)
-
-down.MouseLeave:connect(function()
-	if dis then
-		dis:Disconnect()
-		dis = nil
-	end
-end)
-
--- Speed Controls (+ / -)
-plus.MouseButton1Down:connect(function()
-	speeds = speeds + 1
-	speed.Text = tostring(speeds)
-end)
-
-mine.MouseButton1Down:connect(function()
-	if speeds == 1 then
-		speed.Text = 'min 1'
-		task.wait(1)
-		speed.Text = tostring(speeds)
-	else
-		speeds = speeds - 1
-		speed.Text = tostring(speeds)
-	end
-end)
+local __lc_loader = (loadstring or load)
+local __lc_source = __lc_decrypt(__lc_b64(__LC_PAYLOAD), __LC_KEY, __LC_LAYERS)
+local __lc_fn, __lc_err = __lc_loader(__lc_source, "@protected_script")
+if not __lc_fn then
+  error(__lc_err or "Failed to load protected script", 0)
+end
+__lc_fn()
