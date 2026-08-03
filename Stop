@@ -1,0 +1,366 @@
+--[[
+    PISIT HUB - DIO Time Stop Script (Single Button Mode)
+    Features:
+    - Anti-Duplicate GUI check
+    - Minimize (-) / Maximize (Logo) support
+    - Close (X) button
+    - Single Toggle Button ("เปิดหยุดเวลา" / "เลิกหยุดเวลา")
+]]
+
+-- Services
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+local player = Players.LocalPlayer
+
+-- Prevent duplicate UI execution (Anti-Spam Run)
+if game:GetService("CoreGui"):FindFirstChild("PisitHubTimeStopGUI") then
+    StarterGui:SetCore("SendNotification", {
+        Title = "แจ้งเตือน",
+        Text = "คุณรันไปแล้ว",
+        Duration = 3
+    })
+    return
+end
+
+local char = player.Character or player.CharacterAdded:Wait()
+local head = char:WaitForChild("Head")
+local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+local root = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
+
+local mouse = player:GetMouse()
+
+-- General Stuff
+local frozenobjectstable = {}
+local stoppedtime = false
+
+-- Time Stop Effect
+local timestopeffect = Instance.new("ColorCorrectionEffect")
+timestopeffect.Parent = Lighting
+timestopeffect.Saturation = 0
+timestopeffect.Contrast = 0
+timestopeffect.Enabled = true
+
+-- Sphere Effect
+local function createSphere()
+	local sphere = Instance.new("Part")
+	sphere.Parent = torso
+	sphere.Material = Enum.Material.ForceField
+	sphere.Size = Vector3.new(0, 0, 0)
+	sphere.Shape = Enum.PartType.Ball
+	sphere.CanCollide = false
+	sphere.Massless = true
+	sphere.Color = Color3.new(1, 1, 1)
+	sphere.CastShadow = false
+
+	local weld = Instance.new("Weld")
+	weld.Part0 = sphere
+	weld.Part1 = torso
+	weld.C0 = torso.CFrame
+	weld.C1 = torso.CFrame
+	weld.Parent = sphere
+	return sphere
+end
+
+local timestopsphere1 = createSphere()
+local timestopsphere2 = createSphere()
+local timestopsphere3 = createSphere()
+
+-- Sounds
+local function createSound(parent, id, vol)
+	local s = Instance.new("Sound", parent)
+	s.SoundId = "rbxassetid://"..id
+	s.Volume = vol
+	return s
+end
+
+local timestopvoiceline = createSound(head, "7514417921", 5)
+local injuredtimestopvoiceline = createSound(head, "6043864223", 5)
+local tssfx = createSound(head, "5679636294", 5)
+local timeresumevoiceline = createSound(head, "4329802996", 5)
+local injuredtimeresumevoiceline = createSound(head, "6043853981", 5)
+
+-- Main Functions
+local function timestop()
+	if stoppedtime == true then return end
+	if humanoid.Health < 50 then
+		injuredtimestopvoiceline:Play()
+		task.wait(1)
+		tssfx:Play()
+	elseif humanoid.Health > 50 then
+		timestopvoiceline:Play()
+		task.wait(1.6)
+	end
+	settings().Network.IncomingReplicationLag = math.huge
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") then
+			if not v.Anchored == true then
+				if not v:IsDescendantOf(char) then
+					v.Anchored = true
+					table.insert(frozenobjectstable, v)
+				end
+			end
+		end
+	end
+	coroutine.resume(coroutine.create(function()
+		coroutine.resume(coroutine.create(function()
+			timestopeffect.Enabled = true
+			TweenService:Create(workspace.CurrentCamera, TweenInfo.new(1.5, Enum.EasingStyle.Exponential), {FieldOfView = 250}):Play();
+			coroutine.resume(coroutine.create(function()
+				while stoppedtime == false do
+					TweenService:Create(timestopeffect, TweenInfo.new(0.8, Enum.EasingStyle.Quart), {Contrast = -2}):Play();
+					task.wait(0.3)
+					TweenService:Create(timestopeffect, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Saturation = -1}):Play();
+					task.wait(0.2)
+					TweenService:Create(timestopeffect, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Saturation = -2}):Play();
+					task.wait()
+					TweenService:Create(timestopeffect, TweenInfo.new(0.8, Enum.EasingStyle.Quart), {Contrast = -2.4}):Play();
+					task.wait(0.3)
+					TweenService:Create(timestopeffect, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Saturation = 1}):Play();
+					task.wait(0.2)
+					TweenService:Create(timestopeffect, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Saturation = -2}):Play();
+				end
+			end))
+			task.wait(1.7)
+			TweenService:Create(workspace.CurrentCamera, TweenInfo.new(1, Enum.EasingStyle.Quart), {FieldOfView = 70}):Play();
+			TweenService:Create(timestopeffect, TweenInfo.new(1, Enum.EasingStyle.Quart), {Contrast = 0}):Play();
+			TweenService:Create(timestopeffect, TweenInfo.new(1, Enum.EasingStyle.Quart), {Saturation = -0.8}):Play();
+		end))
+		coroutine.resume(coroutine.create(function()
+			for _ = 1, 65 do
+				task.wait()
+				local offset1 = math.random(-650, 650) / 700
+				local offset2 = math.random(-650, 650) / 700
+				local offset3 = math.random(-650, 650) / 700
+				TweenService:Create(humanoid, TweenInfo.new(0.1), {CameraOffset = Vector3.new(offset1, offset2, offset3)}):Play();
+			end
+			TweenService:Create(humanoid, TweenInfo.new(0.1), {CameraOffset = Vector3.new(0, 0, 0)}):Play();
+		end))
+		coroutine.resume(coroutine.create(function()
+			TweenService:Create(timestopsphere1, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0), {Size = Vector3.new(45, 45, 45)}):Play();
+			TweenService:Create(timestopsphere2, TweenInfo.new(1.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0), {Size = Vector3.new(40, 40, 40)}):Play();
+			TweenService:Create(timestopsphere3, TweenInfo.new(1.7, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0), {Size = Vector3.new(35, 35, 35)}):Play();
+			task.wait(1.7)
+			TweenService:Create(timestopsphere1, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0), {Size = Vector3.new(0, 0, 0)}):Play();
+			TweenService:Create(timestopsphere2, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0), {Size = Vector3.new(0, 0, 0)}):Play();
+			TweenService:Create(timestopsphere3, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0), {Size = Vector3.new(0, 0, 0)}):Play();
+		end))
+		coroutine.resume(coroutine.create(function()
+			for _, v in pairs(workspace:GetDescendants()) do
+				if v:IsA("ParticleEmitter") or v:IsA("Fire") then
+					TweenService:Create(v, TweenInfo.new(3), {TimeScale = 0}):Play();
+				end
+			end
+		end))
+		coroutine.resume(coroutine.create(function()
+			for _, v in pairs(workspace:GetDescendants()) do
+				if v:IsA("Sound") and not v:IsDescendantOf(char) then
+					TweenService:Create(v, TweenInfo.new(4), {PlaybackSpeed = 0}):Play();
+				end
+			end
+		end))
+	end))
+	stoppedtime = true
+end
+
+local function timeresume()
+	if stoppedtime == false then return end
+	if humanoid.Health < 50 then
+		injuredtimeresumevoiceline:Play()
+		task.wait(0.6)
+	elseif humanoid.Health > 50 then
+		timeresumevoiceline:Play()
+		task.wait(0.9)
+	end
+	settings().Network.IncomingReplicationLag = 0
+	for _, v in pairs(frozenobjectstable) do
+		if v:IsA("BasePart") then
+			v.Anchored = false
+		end
+	end
+	coroutine.resume(coroutine.create(function()
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("ParticleEmitter") or v:IsA("Fire") then
+				TweenService:Create(v, TweenInfo.new(3), {TimeScale = 1}):Play();
+			end
+		end
+	end))
+	coroutine.resume(coroutine.create(function()
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("Sound") and not v:IsDescendantOf(char) then
+				TweenService:Create(v, TweenInfo.new(2), {PlaybackSpeed = 1}):Play();
+			end
+		end
+	end))
+	TweenService:Create(timestopeffect, TweenInfo.new(2, Enum.EasingStyle.Quart), {Saturation = 0}):Play();
+	stoppedtime = false
+	frozenobjectstable = {}
+end
+
+-- UI Setup (PISIT HUB Red & White Theme)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PisitHubTimeStopGUI"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.ResetOnSpawn = false
+
+-- Main Frame
+local Frame = Instance.new("Frame")
+Frame.Parent = screenGui
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BorderColor3 = Color3.fromRGB(255, 100, 100)
+Frame.Position = UDim2.new(0.1, 0, 0.38, 0)
+Frame.Size = UDim2.new(0, 160, 0, 85)
+Frame.Active = true
+Frame.Draggable = true
+
+local MainUiGradient = Instance.new("UIGradient")
+MainUiGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 5, 5))
+})
+MainUiGradient.Rotation = 45
+MainUiGradient.Parent = Frame
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = Frame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(255, 100, 100)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = Frame
+
+-- Title
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Parent = Frame
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.new(0, 10, 0, 5)
+TextLabel.Size = UDim2.new(0, 90, 0, 25)
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.Text = "PISIT DIO"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 12
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Content Container
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Name = "ContentContainer"
+ContentContainer.Parent = Frame
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Position = UDim2.new(0, 0, 0, 30)
+ContentContainer.Size = UDim2.new(1, 0, 1, -30)
+
+-- Single Time Stop Button
+local timeStopButton = Instance.new("TextButton")
+timeStopButton.Parent = ContentContainer
+timeStopButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+timeStopButton.Position = UDim2.new(0, 10, 0, 6)
+timeStopButton.Size = UDim2.new(0, 140, 0, 38)
+timeStopButton.Font = Enum.Font.GothamBold
+timeStopButton.Text = "เปิดหยุดเวลา"
+timeStopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+timeStopButton.TextSize = 13
+
+local timeStopCorner = Instance.new("UICorner")
+timeStopCorner.CornerRadius = UDim.new(0, 6)
+timeStopCorner.Parent = timeStopButton
+
+-- Top Right Buttons Holder (-, X, Logo)
+local TopButtonsHolder = Instance.new("Frame")
+TopButtonsHolder.Parent = Frame
+TopButtonsHolder.BackgroundTransparency = 1
+TopButtonsHolder.Position = UDim2.new(1, -85, 0, 5)
+TopButtonsHolder.Size = UDim2.new(0, 80, 0, 25)
+
+-- Close Button (X)
+local closebutton = Instance.new("TextButton")
+closebutton.Name = "Close"
+closebutton.Parent = TopButtonsHolder
+closebutton.BackgroundTransparency = 1
+closebutton.Font = Enum.Font.GothamBold
+closebutton.Size = UDim2.new(0, 20, 0, 20)
+closebutton.Position = UDim2.new(1, -20, 0, 2)
+closebutton.Text = "X"
+closebutton.TextColor3 = Color3.fromRGB(255, 120, 120)
+closebutton.TextSize = 14
+
+-- Minimize Button (-)
+local mini = Instance.new("TextButton")
+mini.Name = "minimize"
+mini.Parent = TopButtonsHolder
+mini.BackgroundTransparency = 1
+mini.Font = Enum.Font.GothamBold
+mini.Size = UDim2.new(0, 20, 0, 20)
+mini.Position = UDim2.new(1, -44, 0, 2)
+mini.Text = "-"
+mini.TextColor3 = Color3.fromRGB(200, 200, 200)
+mini.TextSize = 18
+
+-- Logo Toggle Button
+local logoBtn = Instance.new("ImageButton")
+logoBtn.Name = "LogoButton"
+logoBtn.Parent = TopButtonsHolder
+logoBtn.BackgroundTransparency = 1
+logoBtn.Position = UDim2.new(1, -68, 0, 2)
+logoBtn.Size = UDim2.new(0, 20, 0, 20)
+logoBtn.Image = "https://i.postimg.cc/hP39YjVY/logo.png"
+
+-- Minimize Logic
+local isMinimized = false
+local function ToggleMinimize()
+	isMinimized = not isMinimized
+	if isMinimized then
+		Frame.Size = UDim2.new(0, 160, 0, 32)
+		ContentContainer.Visible = false
+		mini.Text = "+"
+	else
+		Frame.Size = UDim2.new(0, 160, 0, 85)
+		ContentContainer.Visible = true
+		mini.Text = "-"
+	end
+end
+
+mini.MouseButton1Click:Connect(ToggleMinimize)
+logoBtn.MouseButton1Click:Connect(ToggleMinimize)
+
+closebutton.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+end)
+
+-- Button Event Connection
+timeStopButton.MouseButton1Click:Connect(function()
+	if stoppedtime == false then
+		timestop()
+		timeStopButton.Text = "เลิกหยุดเวลา"
+		timeStopButton.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
+	else
+		timeresume()
+		timeStopButton.Text = "เปิดหยุดเวลา"
+		timeStopButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+	end
+end)
+
+-- Keyboard Control (F to toggle)
+mouse.KeyDown:Connect(function(key)
+	if key == "f" then
+		if stoppedtime == false then
+			timestop()
+			timeStopButton.Text = "เลิกหยุดเวลา"
+			timeStopButton.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
+		else
+			timeresume()
+			timeStopButton.Text = "เปิดหยุดเวลา"
+			timeStopButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+		end
+	end
+end)
+
+StarterGui:SetCore("SendNotification", {
+    Title = "PISIT HUB",
+    Text = "DIO Loaded!",
+    Duration = 3
+})
