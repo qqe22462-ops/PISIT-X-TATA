@@ -488,7 +488,6 @@ local function StartFling()
     FlingActive = true
     UpdateStatus()
     Message("Started", "Flinging " .. count .. " targets", 2)
-    
     task.spawn(function()
         while FlingActive do
             local validTargets = {}
