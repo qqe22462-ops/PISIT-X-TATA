@@ -284,7 +284,7 @@ CheatSection:CreateButton({
     Title = "สคริปบิน",
     Callback = function()
         pcall(function()
-            loadstring(game:HttpGet("https://encrypt-x.pages.dev/Access?Id=9248191161347"))()
+    loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2859291643124"))("2859291643124")
 end)
     end
 })
