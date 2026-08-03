@@ -1,5 +1,5 @@
 -- ====================================================================
--- PISIT HUB | Player & Cheat Tabs Only (Original Push Script)
+-- PISIT HUB | Player & Cheat Tabs Only (Updated Scripts)
 -- ====================================================================
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT_HUB.bundle.lua"))()
@@ -135,25 +135,31 @@ ActionSection:CreateToggle({
 })
 
 -- ====================================================================
--- CHEAT TAB: ปุ่มกดรันสคริปต์เสริม (ผลักกระเด็น & บิน)
+-- CHEAT TAB: ปุ่มกดรันสคริปต์เสริม (สคริปต์ผลักผู้เล่น & สคริปต์บินของคุณ)
 -- ====================================================================
 CheatSection:CreateButton({
-    Title = "สคริปผลักกระเด็น",
+    Title = "สคริปผลักผู้เล่น",
     Callback = function()
-        pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/%E0%B8%9C%E0%B8%A5%E0%B8%B1%E0%B8%81%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%94%E0%B9%87%E0%B8%99"))()
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1503275336259"))("1503275336259")
         end)
+        
+        if not success then
+            warn("รันสคริปต์ผลักผู้เล่นไม่สำเร็จ: " .. tostring(err))
+        end
     end
 })
 
 CheatSection:CreateButton({
     Title = "สคริปบิน",
     Callback = function()
-        pcall(function()
-            local success, func = pcall(loadstring, game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2859291643124"))
-            if success and type(func) == "function" then
-                func("2859291643124")
-            end
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1023017367002"))("1023017367002")
         end)
+        
+        if not success then
+            warn("รันสคริปต์บินไม่สำเร็จ: " .. tostring(err))
+        end
     end
 })
+
