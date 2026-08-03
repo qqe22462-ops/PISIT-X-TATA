@@ -284,8 +284,8 @@ CheatSection:CreateButton({
     Title = "สคริปบิน",
     Callback = function()
         pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/%E0%B8%9A%E0%B8%B4%E0%B8%99"))()
-        end)
+            loadstring(game:HttpGet("https://encrypt-x.pages.dev/Access?Id=9248191161347"))()
+end)
     end
 })
 
