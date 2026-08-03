@@ -138,11 +138,14 @@ ActionSection:CreateToggle({
 -- CHEAT TAB: ปุ่มกดรันสคริปต์เสริม (สคริปต์ผลักผู้เล่น & สคริปต์บินของคุณ)
 -- ====================================================================
 CheatSection:CreateButton({
-    Title = "สคริปผลักผู้เล่น",
+    Title = "สคริปผลักคน",
     Callback = function()
-        local success, err = pcall(function()
-            loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1503275336259"))("1503275336259")
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/%E0%B8%9C%E0%B8%A5%E0%B8%B1%E0%B8%81%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%94%E0%B9%87%E0%B9%87%E0%B8%99"))()
         end)
+    end
+})
+
         
         if not success then
             warn("รันสคริปต์ผลักผู้เล่นไม่สำเร็จ: " .. tostring(err))
