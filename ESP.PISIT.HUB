@@ -1,5 +1,5 @@
 -- ====================================================================
--- PISIT HUB | 3D Box ESP & NameESP (Self-Cleaning & Auto-Refresh)
+-- PISIT HUB | True 3D Box ESP & NameESP (Self-Cleaning & Auto-Refresh)
 -- ====================================================================
 
 local Players = game:GetService("Players")
@@ -8,9 +8,8 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 local boxes = {}
-local names = {}
 
--- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น) และ ตัวหนังสือชื่อบนหัว
+-- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น) และ ตัวหนังสือชื่อสีแดงบนหัว
 local function createESP()
     local boxLines = {}
     for i = 1, 12 do
@@ -43,7 +42,7 @@ local function removeESP(espData)
     end
 end
 
--- ฟังก์ชันเคลียร์ระบบทั้งหมด (เวลาปิดใช้งาน)
+-- ฟังก์ชันเคลียร์ระบบทั้งหมด (เวลาสับสวิตช์ปิดจาก UI)
 local renderConnection
 local function cleanup()
     if renderConnection then
@@ -85,34 +84,33 @@ renderConnection = RunService.RenderStepped:Connect(function()
             if character and humanoidRootPart and humanoid and humanoid.Health > 0 and head then
                 if player.Team ~= LocalPlayer.Team or not LocalPlayer.Team then
                     local cf = humanoidRootPart.CFrame
-                    -- ปรับขนาดสัดส่วน 3 มิติให้ครอบตัวละครได้พอดีเป๊ะ
                     local sizeX, sizeY, sizeZ = 2.2, 4.8, 2.2
                     
                     -- คำนวณจุดมุมทั้ง 8 ของกล่อง 3D แท้ๆ (บน 4, ล่าง 4)
                     local corners = {
-                        cf * CFrame.new(-sizeX, sizeY, -sizeZ),
-                        cf * CFrame.new(sizeX, sizeY, -size.Z),
-                        cf * CFrame.new(sizeX, sizeY, sizeZ),
-                        cf * CFrame.new(-sizeX, size.Y, sizeZ),
-                        cf * CFrame.new(-sizeX, -sizeY, -size.Z),
+                        cf * CFrame.new(-sizeX, size.Y, -size.Z),
+                        cf * CFrame.new(sizeX, size.Y, -size.Z),
+                        cf * CFrame.new(sizeX, size.Y, size.Z),
+                        cf * CFrame.new(-sizeX, size.Y, size.Z),
+                        cf * CFrame.new(-sizeX, -size.Y, -size.Z),
                         cf * CFrame.new(sizeX, -size.Y, -size.Z),
-                        cf * CFrame.new(sizeX, -size.Y, sizeZ),
-                        cf * CFrame.new(-sizeX, -size.Y, sizeZ)
+                        cf * CFrame.new(sizeX, -size.Y, size.Z),
+                        cf * CFrame.new(-sizeX, -size.Y, size.Z)
                     }
                     
                     local screenPoints = {}
-                    local allVisible = true
+                    local anyVisible = false
                     
                     for i, corner in ipairs(corners) do
                         local screenPoint, onScreen = Camera:WorldToViewportPoint(corner.Position)
-                        if not onScreen then
-                            allVisible = false
-                            break
+                        if onScreen then
+                            anyVisible = true
                         end
                         screenPoints[i] = Vector2.new(screenPoint.X, screenPoint.Y)
                     end
                     
-                    if allVisible then
+                    -- ถ้าอยู่ในมุมมองกล้อง ให้วาดเส้นกล่อง 3 มิติเชื่อมต่อกันทันที
+                    if anyVisible then
                         local connections = {
                             {1,2}, {2,3}, {3,4}, {4,1}, -- ฝั่งบน
                             {5,6}, {6,7}, {7,8}, {8,5}, -- ฝั่งล่าง
@@ -121,11 +119,11 @@ renderConnection = RunService.RenderStepped:Connect(function()
                         
                         for i, conn in ipairs(connections) do
                             local line = boxLines[i]
-                            if line then
+                            if line and screenPoints[conn[1]] and screenPoints[conn[2]] then
                                 line.From = screenPoints[conn[1]]
                                 line.To = screenPoints[conn[2]]
                                 
-                                -- สลับสีเส้นให้ดูมีมิติ สวยงาม
+                                -- สลับสีเส้นให้ดูมีมิติสวยงาม (แดงสลับดำ)
                                 if i % 2 == 0 then
                                     line.Color = Color3.fromRGB(255, 20, 20)
                                 else
@@ -135,7 +133,7 @@ renderConnection = RunService.RenderStepped:Connect(function()
                             end
                         end
                         
-                        -- แสดงชื่อบนหัวผู้เล่น (สีแดง)
+                        -- แสดงชื่อสีแดงบนหัวผู้เล่น
                         local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.2, 0))
                         if headOnScreen then
                             nameText.Text = player.Name
