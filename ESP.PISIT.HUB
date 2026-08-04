@@ -1,5 +1,5 @@
 -- ====================================================================
--- PISIT HUB | True 3D Box ESP & NameESP (Self-Cleaning & Auto-Refresh)
+-- PISIT HUB | True 3D Box ESP & Dynamic Scaled NameESP
 -- ====================================================================
 
 local Players = game:GetService("Players")
@@ -7,9 +7,16 @@ local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-local boxes = {}
+-- ป้องกันรันซ้ำซ้อน
+if getgenv().PisitEspCleanup then
+    pcall(getgenv().PisitEspCleanup)
+end
 
--- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น) และ ตัวหนังสือชื่อสีแดงบนหัว
+local boxes = {}
+local renderConnection = nil
+local refreshTask = nil
+
+-- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น) และ ตัวหนังสือชื่อสีแดง
 local function createESP()
     local boxLines = {}
     for i = 1, 12 do
@@ -22,7 +29,6 @@ local function createESP()
     
     local nameText = Drawing.new("Text")
     nameText.Visible = false
-    nameText.Size = 16
     nameText.Center = true
     nameText.Outline = true
     nameText.Color = Color3.fromRGB(255, 20, 20) -- สีแดง
@@ -30,49 +36,64 @@ local function createESP()
     return {Lines = boxLines, Text = nameText}
 end
 
--- ฟังก์ชันลบ ESP ทิ้ง
+-- ฟังก์ชันลบ ESP ทิ้งทั้งหมด
 local function removeESP(espData)
     if espData then
-        for _, line in ipairs(espData.Lines) do
-            line:Remove()
+        if espData.Lines then
+            for _, line in ipairs(espData.Lines) do
+                pcall(function() line:Remove() end)
+            end
         end
         if espData.Text then
-            espData.Text:Remove()
+            pcall(function() espData.Text:Remove() end)
         end
     end
 end
 
--- ฟังก์ชันเคลียร์ระบบทั้งหมด (เวลาสับสวิตช์ปิดจาก UI)
-local renderConnection
+-- ฟังก์ชันเคลียร์ระบบทั้งหมด (สั่งปิดจาก UI หลัก)
 local function cleanup()
     if renderConnection then
         renderConnection:Disconnect()
         renderConnection = nil
     end
+    if refreshTask then
+        task.cancel(refreshTask)
+        refreshTask = nil
+    end
     for _, espData in pairs(boxes) do
         removeESP(espData)
     end
     table.clear(boxes)
-    if getgenv then
-        getgenv().PisitEspCleanup = nil
-    end
+    getgenv().PisitEspCleanup = nil
 end
 
-if getgenv then
-    getgenv().PisitEspCleanup = cleanup
-end
+getgenv().PisitEspCleanup = cleanup
 
--- ลูป RenderStepped วาดกล่อง 3D และชื่อแบบ Real-time
-renderConnection = RunService.RenderStepped:Connect(function()
-    local activePlayers = Players:GetPlayers()
-    
-    for _, player in ipairs(activePlayers) do
-        if player ~= LocalPlayer then
-            if not boxes[player] then
+-- ระบบตรวจจับผู้เล่นเข้า-ออกทุกๆ 1 วินาที
+refreshTask = task.spawn(function()
+    while true do
+        task.wait(1.0)
+        local currentPlayers = Players:GetPlayers()
+        
+        for _, player in ipairs(currentPlayers) do
+            if player ~= LocalPlayer and not boxes[player] then
                 boxes[player] = createESP()
             end
-            
-            local espData = boxes[player]
+        end
+        
+        for player, espData in pairs(boxes) do
+            if not player or not player.Parent then
+                removeESP(espData)
+                boxes[player] = nil
+            end
+        end
+    end
+end)
+
+-- ลูป RenderStepped วาดกล่อง 3D และชื่อที่ย่อ/ขยายตามระยะทางแบบเรียลไทม์
+renderConnection = RunService.RenderStepped:Connect(function()
+    for player, espData in pairs(boxes) do
+        if player and player ~= LocalPlayer then
             local boxLines = espData.Lines
             local nameText = espData.Text
             
@@ -84,18 +105,18 @@ renderConnection = RunService.RenderStepped:Connect(function()
             if character and humanoidRootPart and humanoid and humanoid.Health > 0 and head then
                 if player.Team ~= LocalPlayer.Team or not LocalPlayer.Team then
                     local cf = humanoidRootPart.CFrame
-                    local sizeX, sizeY, sizeZ = 2.2, 4.8, 2.2
+                    local size = Vector3.new(3.0, 5.0, 3.0)
                     
-                    -- คำนวณจุดมุมทั้ง 8 ของกล่อง 3D แท้ๆ (บน 4, ล่าง 4)
+                    -- คำนวณจุดมุมทั้ง 8 ของกล่อง 3D
                     local corners = {
-                        cf * CFrame.new(-sizeX, size.Y, -size.Z),
-                        cf * CFrame.new(sizeX, size.Y, -size.Z),
-                        cf * CFrame.new(sizeX, size.Y, size.Z),
-                        cf * CFrame.new(-sizeX, size.Y, size.Z),
-                        cf * CFrame.new(-sizeX, -size.Y, -size.Z),
-                        cf * CFrame.new(sizeX, -size.Y, -size.Z),
-                        cf * CFrame.new(sizeX, -size.Y, size.Z),
-                        cf * CFrame.new(-sizeX, -size.Y, size.Z)
+                        cf * CFrame.new(-size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, size.Z)
                     }
                     
                     local screenPoints = {}
@@ -109,12 +130,11 @@ renderConnection = RunService.RenderStepped:Connect(function()
                         screenPoints[i] = Vector2.new(screenPoint.X, screenPoint.Y)
                     end
                     
-                    -- ถ้าอยู่ในมุมมองกล้อง ให้วาดเส้นกล่อง 3 มิติเชื่อมต่อกันทันที
                     if anyVisible then
                         local connections = {
-                            {1,2}, {2,3}, {3,4}, {4,1}, -- ฝั่งบน
-                            {5,6}, {6,7}, {7,8}, {8,5}, -- ฝั่งล่าง
-                            {1,5}, {2,6}, {3,7}, {4,8}  -- เส้นเชื่อมแนวตั้ง
+                            {1,2}, {2,3}, {3,4}, {4,1},
+                            {5,6}, {6,7}, {7,8}, {8,5},
+                            {1,5}, {2,6}, {3,7}, {4,8}
                         }
                         
                         for i, conn in ipairs(connections) do
@@ -123,7 +143,6 @@ renderConnection = RunService.RenderStepped:Connect(function()
                                 line.From = screenPoints[conn[1]]
                                 line.To = screenPoints[conn[2]]
                                 
-                                -- สลับสีเส้นให้ดูมีมิติสวยงาม (แดงสลับดำ)
                                 if i % 2 == 0 then
                                     line.Color = Color3.fromRGB(255, 20, 20)
                                 else
@@ -133,10 +152,14 @@ renderConnection = RunService.RenderStepped:Connect(function()
                             end
                         end
                         
-                        -- แสดงชื่อสีแดงบนหัวผู้เล่น
-                        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.2, 0))
+                        -- คำนวณระยะห่างเพื่อปรับขนาดชื่อ (ใกล้ใหญ่, ไกลเล็ก) ตามระบบ 3 มิติ
+                        local distance = (Camera.CFrame.Position - humanoidRootPart.Position).Magnitude
+                        local dynamicSize = math.clamp(math.floor(2200 / distance), 10, 20) -- ปรับขนาดตามระยะห่าง
+                        
+                        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.3, 0))
                         if headOnScreen then
-                            nameText.Text = player.Name
+                            nameText.Text = player.DisplayName or player.Name
+                            nameText.Size = dynamicSize
                             nameText.Position = Vector2.new(headPos.X, headPos.Y)
                             nameText.Visible = true
                         else
