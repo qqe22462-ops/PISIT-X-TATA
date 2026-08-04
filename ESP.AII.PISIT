@@ -1,5 +1,5 @@
 -- ====================================================================
--- PISIT HUB AII อิสระ | Ultimate Multi-ESP System (Fixed 3D Box & NameESP)
+-- PISIT HUB AII อิสระ | Ultimate Multi-ESP System (Multi-Color Selection)
 -- ====================================================================
 
 local Players = game:GetService("Players")
@@ -19,7 +19,7 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.ResetOnSpawn = false
 
 local selectedModes = {["1D"] = false, ["2D"] = false, ["3D"] = false}
-local selectedColorIndex = 1
+local selectedColors = {} -- เปลี่ยนเป็นระบบเก็บสถานะเลือกหลายสีพร้อมกัน (สูงสุด 5 สีหรือทั้งหมด)
 local isRunning = false
 
 local colorList = {
@@ -108,7 +108,7 @@ Instance.new("UICorner", NextBtn1).CornerRadius = UDim.new(0, 6)
 
 
 -- ====================================================================
--- หน้าต่างที่ 2: เลือกสี
+-- หน้าต่างที่ 2: เลือกสี (รองรับการเลือกผสมหลายสีพร้อมกัน)
 -- ====================================================================
 local Window2 = Instance.new("Frame", screenGui)
 Window2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -132,9 +132,9 @@ T2.BackgroundTransparency = 1
 T2.Position = UDim2.new(0, 0, 0, 12)
 T2.Size = UDim2.new(1, 0, 0, 25)
 T2.Font = Enum.Font.GothamBold
-T2.Text = "PISIT HUB AII อิสระ"
+T2.Text = "PISIT HUB AII อิสระ (เลือกสีผสม)"
 T2.TextColor3 = Color3.fromRGB(255, 255, 255)
-T2.TextSize = 15
+T2.TextSize = 14
 
 local colorButtons = {}
 for i, colData in ipairs(colorList) do
@@ -142,27 +142,33 @@ for i, colData in ipairs(colorList) do
     local row = math.floor((i - 1) / 2)
     
     local cBtn = Instance.new("TextButton", Window2)
-    cBtn.BackgroundColor3 = (i == selectedColorIndex) and Color3.fromRGB(100, 20, 20) or Color3.fromRGB(25, 25, 25)
+    cBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     cBtn.Position = UDim2.new(0, 15 + (col * 127), 0, 50 + (row * 31))
     cBtn.Size = UDim2.new(0, 122, 0, 27)
     cBtn.Font = Enum.Font.Gotham
-    cBtn.Text = colData.Name
-    cBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    cBtn.Text = colData.Name .. " [OFF]"
+    cBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     cBtn.TextSize = 11
     cBtn.BorderSizePixel = 0
     Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 5)
     
     local stroke = Instance.new("UIStroke", cBtn)
-    stroke.Color = (i == selectedColorIndex) and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(45, 45, 45)
+    stroke.Color = Color3.fromRGB(45, 45, 45)
     
     cBtn.MouseButton1Click:Connect(function()
-        selectedColorIndex = i
-        for idx, cb in pairs(colorButtons) do
-            cb.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            cb.UIStroke.Color = Color3.fromRGB(45, 45, 45)
+        if selectedColors[i] then
+            selectedColors[i] = nil
+            cBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            cBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            cBtn.Text = colData.Name .. " [OFF]"
+            stroke.Color = Color3.fromRGB(45, 45, 45)
+        else
+            selectedColors[i] = colData.Color
+            cBtn.BackgroundColor3 = Color3.fromRGB(100, 20, 20)
+            cBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            cBtn.Text = colData.Name .. " [ON]"
+            stroke.Color = Color3.fromRGB(255, 0, 0)
         end
-        cBtn.BackgroundColor3 = Color3.fromRGB(100, 20, 20)
-        stroke.Color = Color3.fromRGB(255, 0, 0)
     end)
     table.insert(colorButtons, cBtn)
 end
@@ -235,7 +241,7 @@ end)
 
 
 -- ====================================================================
--- ระบบวาด Drawing ESP (แก้ไข 3D สมจริง + เพิ่มชื่อสีแดงปรับขนาดตามระยะ)
+-- ระบบวาด Drawing ESP (รองรับ Multi-Color ผสมสีวนลูป + ชื่อเปลี่ยนตามสีที่เลือก)
 -- ====================================================================
 local allEspData = {}
 
@@ -253,7 +259,6 @@ local function setupPlayerESP()
     data.nameText.Size = 16
     data.nameText.Center = true
     data.nameText.Outline = true
-    data.nameText.Color = Color3.fromRGB(255, 20, 20) -- ชื่อสีแดง
     
     for i = 1, 4 do
         local l = Drawing.new("Line")
@@ -285,7 +290,18 @@ end)
 RunService.RenderStepped:Connect(function()
     if not isRunning then return end
     
-    local chosenColor = colorList[selectedColorIndex].Color
+    -- รวบรวมสีที่ถูกเลือกทั้งหมดมาใส่ตาราง
+    local activeColors = {}
+    for _, col in pairs(selectedColors) do
+        table.insert(activeColors, col)
+    end
+    
+    -- ถ้าไม่ได้เลือกสีเลย ให้ใช้สีขาวเป็นค่าเริ่มต้น
+    if #activeColors == 0 then
+        table.insert(activeColors, Color3.fromRGB(255, 255, 255))
+    end
+    
+    local tickTime = tick()
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -306,6 +322,10 @@ RunService.RenderStepped:Connect(function()
             
             if char and root and humanoid and humanoid.Health > 0 then
                 if player.Team ~= LocalPlayer.Team or not LocalPlayer.Team then
+                    
+                    -- ระบบสลับ/ผสมสีตามจำนวนสีที่เลือก
+                    local colorIndex = (math.floor(tickTime * 3) % #activeColors) + 1
+                    local chosenColor = activeColors[colorIndex]
                     
                     -- 1D Mode
                     if selectedModes["1D"] then
@@ -349,14 +369,14 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
                     
-                    -- 3D Mode (แก้ไขใหม่: ใช้ anyVis ให้แสดงผลลื่นไหล ไม่หลุดขอบจอ)
+                    -- 3D Mode
                     if selectedModes["3D"] then
                         local cf = root.CFrame
                         local size3D = Vector3.new(2.2, 4.8, 2.2)
                         local corners = {
                             cf * CFrame.new(-size3D.X, size3D.Y, -size3D.Z),
                             cf * CFrame.new(size3D.X, size3D.Y, -size3D.Z),
-                            cf * CFrame.new(size3D.X, size3D.Y, size3D.Z),
+                            cf * CFrame.new(size3D.X, size3D.Y, -size3D.Z),
                             cf * CFrame.new(-size3D.X, size3D.Y, size3D.Z),
                             cf * CFrame.new(-size3D.X, -size3D.Y, -size3D.Z),
                             cf * CFrame.new(size3D.X, -size3D.Y, -size3D.Z),
@@ -392,7 +412,7 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
 
-                    -- แสดงชื่อบนหัว (สีแดง ปรับขนาดตามระยะทาง)
+                    -- แสดงชื่อบนหัว (เปลี่ยนสีตามสีที่เลือก และปรับขนาดตามระยะทาง)
                     if head then
                         local distance = (Camera.CFrame.Position - root.Position).Magnitude
                         local dynamicSize = math.clamp(math.floor(2200 / distance), 10, 18)
@@ -401,6 +421,7 @@ RunService.RenderStepped:Connect(function()
                         if headOnScreen then
                             data.nameText.Text = player.DisplayName or player.Name
                             data.nameText.Size = dynamicSize
+                            data.nameText.Color = chosenColor -- ใช้สีเดียวกับเส้น ESP ที่เลือก
                             data.nameText.Position = Vector2.new(headPos.X, headPos.Y)
                             data.nameText.Visible = true
                         else
@@ -413,4 +434,3 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
