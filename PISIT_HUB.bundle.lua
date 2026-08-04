@@ -1055,7 +1055,7 @@ function Window:_buildTogglePill()
 
 	self.PillLabel = Utility.New("TextLabel", {
 		BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 16, 0, 0),
-		Text = "เปิด PISIT HUB", Font = Enum.Font.GothamBold, TextSize = 13,
+		Text = "ค่าย PISIT HUB", Font = Enum.Font.GothamBold, TextSize = 13,
 		TextColor3 = Theme.Get("Text"), TextXAlignment = Enum.TextXAlignment.Left, Parent = self.TogglePill
 	})
 
