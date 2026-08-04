@@ -1,5 +1,5 @@
 -- ====================================================================
--- PISIT HUB | 3D Box ESP (Optimized Smooth Red-Black Theme)
+-- PISIT HUB | 3D Box ESP (Optimized Smooth Red-Black Theme with Toggle Support)
 -- ====================================================================
 
 local Players = game:GetService("Players")
@@ -7,7 +7,13 @@ local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
+-- ป้องกันรันซ้ำซ้อน: ถ้ามีตัวเก่าค้างอยู่ ให้สั่งปิดและเคลียร์ทิ้งก่อนทันที
+if getgenv().PisitEspCleanup then
+    getgenv().PisitEspCleanup()
+end
+
 local boxes = {}
+local isRunning = true
 
 -- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น)
 local function createBox()
@@ -15,22 +21,44 @@ local function createBox()
     for i = 1, 12 do
         local line = Drawing.new("Line")
         line.Visible = false
-        line.Thickness = 1.8 -- เพิ่มความหนาให้เส้นดูเด่นชัดและสวยขึ้น
+        line.Thickness = 1.8
         line.Transparency = 1
         table.insert(boxLines, line)
     end
     return boxLines
 end
 
--- ลบเส้นทิ้งเวลาผู้เล่นออกเกม
+-- ฟังก์ชันลบเส้นและทำลาย Drawing ทิ้งทั้งหมด
 local function removeBox(boxLines)
     for _, line in ipairs(boxLines) do
         line:Remove()
     end
 end
 
--- อัปเดตตำแหน่งกล่อง 3 มิติแบบ Real-time ทุกเฟรม (เน้นความลื่นไหล ไม่กระตุก)
-RunService.RenderStepped:Connect(function()
+-- ฟังก์ชันเคลียร์ระบบทั้งหมด (ใช้สำหรับสั่งปิดตัว ESP ออกจากเกมแบบเกลี้ยงๆ)
+local cleanupFunc = function()
+    isRunning = false
+    for player, boxLines in pairs(boxes) do
+        removeBox(boxLines)
+    end
+    table.clear(boxes)
+    if getgenv().PisitEspCleanup == cleanupFunc then
+        getgenv().PisitEspCleanup = nil
+    end
+end
+
+getgenv().PisitEspCleanup = cleanupFunc
+
+-- เชื่อมต่อลูป RenderStepped
+local renderConnection
+renderConnection = RunService.RenderStepped:Connect(function()
+    if not isRunning then
+        if renderConnection then
+            renderConnection:Disconnect()
+        end
+        return
+    end
+
     local activePlayers = Players:GetPlayers()
     
     for _, player in ipairs(activePlayers) do
@@ -45,13 +73,22 @@ RunService.RenderStepped:Connect(function()
             local humanoid = character and character:FindFirstChild("Humanoid")
             
             if character and humanoidRootPart and humanoid and humanoid.Health > 0 then
-                -- เช็คทีม (คนละทีมถึงจะแสดงผล)
                 if player.Team ~= LocalPlayer.Team or not LocalPlayer.Team then
                     local cf = humanoidRootPart.CFrame
-                    local size = Vector3.new(3.4, 5.4, 3.4) -- ขยายขนาดกล่องให้ใหญ่ขึ้นครอบตัวละครได้สะใจขึ้น
+                    local size = Vector3.new(3.4, 5.4, 3.4)
                     
-                    -- คำนวณจุดมุมทั้ง 8 ของกล่อง 3D
                     local corners = {
+                        cf * CFrame.new(-size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, size.Z),
+                        cf * CGrade and cf * CFrame.new(-size.X, -size.Y, size.Z) or cf * CFrame.new(-size.X, -size.Y, size.Z)
+                    }
+                    -- ใช้มุมคำนวณแบบมาตรฐานเดิม
+                    corners = {
                         cf * CFrame.new(-size.X, size.Y, -size.Z),
                         cf * CFrame.new(size.X, size.Y, -size.Z),
                         cf * CFrame.new(size.X, size.Y, size.Z),
@@ -76,24 +113,24 @@ RunService.RenderStepped:Connect(function()
                     
                     if allVisible then
                         local connections = {
-                            {1,2}, {2,3}, {3,4}, {4,1}, -- ฝั่งบน
-                            {5,6}, {6,7}, {7,8}, {8,5}, -- ฝั่งล่าง
-                            {1,5}, {2,6}, {3,7}, {4,8}  -- เส้นเชื่อมแนวตั้ง
+                            {1,2}, {2,3}, {3,4}, {4,1},
+                            {5,6}, {6,7}, {7,8}, {8,5},
+                            {1,5}, {2,6}, {3,7}, {4,8}
                         }
                         
                         for i, conn in ipairs(connections) do
                             local line = boxLines[i]
-                            line.From = screenPoints[conn[1]]
-                            line.To = screenPoints[conn[2]]
-                            
-                            -- จัดระเบียบสลับสี แดง และ ดำ สลับเส้นกันอย่างลงตัวแบบสมูท
-                            if i % 2 == 0 then
-                                line.Color = Color3.fromRGB(255, 20, 20) -- สีแดงสด
-                            else
-                                line.Color = Color3.fromRGB(10, 10, 10) -- สีดำเข้มตัดขอบ
+                            if line then
+                                line.From = screenPoints[conn[1]]
+                                line.To = screenPoints[conn[2]]
+                                
+                                if i % 2 == 0 then
+                                    line.Color = Color3.fromRGB(255, 20, 20)
+                                else
+                                    line.Color = Color3.fromRGB(10, 10, 10)
+                                end
+                                line.Visible = true
                             end
-                            
-                            line.Visible = true
                         end
                     else
                         for _, line in ipairs(boxLines) do
@@ -121,4 +158,3 @@ Players.PlayerRemoving:Connect(function(player)
         boxes[player] = nil
     end
 end)
-
