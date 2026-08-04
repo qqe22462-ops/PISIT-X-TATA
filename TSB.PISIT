@@ -1,0 +1,241 @@
+-- PISIT x TSB (Dynamic Scale & Clean Red/Black UI)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+local creatorName = "asasaafafe"
+local clickCount = 0
+
+_G.SelectedTarget = _G.SelectedTarget or nil
+_G.StickOn = _G.StickOn or false
+_G.SkillOn = _G.SkillOn or false
+
+local Theme = {
+    Background = Color3.fromRGB(10, 10, 10),
+    Container = Color3.fromRGB(18, 18, 18),
+    Accent = Color3.fromRGB(220, 20, 60),
+    Text = Color3.fromRGB(245, 245, 245)
+}
+
+local function applyESP(targetPlayer, color, isRainbow)
+    task.spawn(function()
+        while true do
+            task.wait(1)
+            if targetPlayer and targetPlayer.Character then
+                local char = targetPlayer.Character
+                local highlight = char:FindFirstChild("PisitHighlight") or Instance.new("Highlight", char)
+                highlight.Name = "PisitHighlight"
+                highlight.FillColor = color
+                highlight.OutlineColor = color
+                highlight.FillTransparency = 0.5
+                highlight.OutlineTransparency = 0
+                if isRainbow then
+                    task.spawn(function()
+                        while char and char.Parent and highlight.Parent do
+                            for i = 0, 1, 0.01 do
+                                if not highlight.Parent then break end
+                                highlight.FillColor = Color3.fromHSV(i, 1, 1)
+                                highlight.OutlineColor = Color3.fromHSV(i, 1, 1)
+                                task.wait(0.05)
+                            end
+                        end
+                    end)
+                end
+                break
+            end
+        end
+    end)
+end
+
+if not player:FindFirstChild("IsRunningPisit") then
+    Instance.new("BoolValue", player).Name = "IsRunningPisit"
+end
+
+local function updateESPLogic()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name == creatorName then
+            if player.Name ~= creatorName then applyESP(p, Color3.new(1,1,1), true) end
+        else
+            if player.Name == creatorName then
+                task.spawn(function()
+                    while not p:FindFirstChild("IsRunningPisit") do task.wait(2) end
+                    applyESP(p, Color3.fromRGB(255, 255, 255), false)
+                end)
+            end
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(p) updateESPLogic() end)
+updateESPLogic()
+
+local function clearUI()
+    local names = {"PisitLauncher", "PisitFinalV44", "SaitamaSkillGui", "PisitWarning", "PisitRainGui"}
+    for _, n in pairs(names) do if player.PlayerGui:FindFirstChild(n) then player.PlayerGui[n]:Destroy() end end
+end
+clearUI()
+
+local function spawnTextRain()
+    local rainGui = Instance.new("ScreenGui", player.PlayerGui); rainGui.Name = "PisitRainGui"; rainGui.ResetOnSpawn = false
+    local active = true
+    task.delay(10, function() active = false; task.wait(3); if rainGui then rainGui:Destroy() end end)
+    task.spawn(function()
+        while active do
+            local txt = Instance.new("TextLabel", rainGui)
+            txt.Size = UDim2.new(0, 200, 0, 30); txt.Position = UDim2.new(math.random(), 0, -0.1, 0)
+            txt.BackgroundTransparency = 1; txt.Text = "เขาเป็นผู้สร้างสคริป"; txt.TextColor3 = Color3.fromRGB(255, 0, 0)
+            txt.TextScaled = true; txt.Font = Enum.Font.SourceSansBold; Instance.new("UIStroke", txt).Thickness = 2
+            txt:TweenPosition(UDim2.new(txt.Position.X.Scale, 0, 1.1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Linear, 2, true, function() txt:Destroy() end)
+            task.wait(0.3)
+        end
+    end)
+end
+
+local function showWarning()
+    local warnGui = Instance.new("ScreenGui", player.PlayerGui); warnGui.Name = "PisitWarning"; warnGui.ResetOnSpawn = false
+    local txt = Instance.new("TextLabel", warnGui)
+    txt.Size = UDim2.new(1, 0, 0.2, 0); txt.Position = UDim2.new(0, 0, 0.4, 0); txt.BackgroundTransparency = 1
+    txt.Text = "คนนี้เป็นคนสร้างสคริปไม่สามารถล็อคเป้าได้ เขาคนนั้นชื่อ asasaafafe"; txt.TextScaled = true; txt.Font = Enum.Font.SourceSansBold
+    Instance.new("UIStroke", txt).Thickness = 3
+    if clickCount <= 7 then txt.TextColor3 = Color3.fromRGB(0, 255, 0)
+    elseif clickCount >= 8 and clickCount < 10 then txt.TextColor3 = Color3.fromRGB(255, 0, 0)
+    elseif clickCount == 10 then spawnTextRain() end
+    task.wait(5); if warnGui then warnGui:Destroy() end
+end
+
+-- ตัวเลือก Launcher ขนาดหน้าต่าง
+local launcherGui = Instance.new("ScreenGui", player.PlayerGui); launcherGui.Name = "PisitLauncher"; launcherGui.ResetOnSpawn = false
+local lFrame = Instance.new("Frame", launcherGui)
+lFrame.Size = UDim2.new(0, 280, 0, 230); lFrame.Position = UDim2.new(0.5, -140, 0.5, -115); lFrame.BackgroundColor3 = Theme.Background
+Instance.new("UICorner", lFrame).CornerRadius = UDim.new(0, 8)
+local lStroke = Instance.new("UIStroke", lFrame); lStroke.Color = Theme.Accent; lStroke.Thickness = 2
+
+local titleHead = Instance.new("TextLabel", lFrame)
+titleHead.Size = UDim2.new(1, 0, 0, 40); titleHead.BackgroundTransparency = 1; titleHead.Text = "PISIT x TSB SELECT SIZE"
+titleHead.TextColor3 = Theme.Text; titleHead.TextScaled = true; titleHead.Font = Enum.Font.GothamBold
+
+local function createLBtn(name, pos, accentColor, callback)
+    local btn = Instance.new("TextButton", lFrame); btn.Size = UDim2.new(0.85, 0, 0, 42); btn.Position = pos; btn.Text = name
+    btn.BackgroundColor3 = Theme.Container; btn.TextColor3 = Theme.Text; btn.TextScaled = true; btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", btn); stroke.Color = accentColor; stroke.Thickness = 1.5
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+RunService.Heartbeat:Connect(function()
+    if not _G.SelectedTarget then return end
+    local target = _G.SelectedTarget
+    local tChar = (target:IsA("Player") and target.Character) or (not target:IsA("Player") and target)
+    local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if tChar and tChar:FindFirstChild("HumanoidRootPart") and myHRP then
+        local tHRP = tChar.HumanoidRootPart
+        if _G.SkillOn then myHRP.CFrame = CFrame.new(tHRP.Position + (tHRP.CFrame.LookVector * 30), tHRP.Position)
+        elseif _G.StickOn then
+            local tHum = tChar:FindFirstChildOfClass("Humanoid")
+            local moveDir = tHum and tHum.MoveDirection or Vector3.new(0,0,0)
+            local finalPos = (moveDir.Magnitude > 0) and (tHRP.Position + (moveDir * 6) + Vector3.new(0, -5, 0)) or (tHRP.CFrame * CFrame.new(0, -5, 4)).Position
+            myHRP.CFrame = CFrame.new(finalPos, tHRP.Position)
+        end
+    end
+end)
+
+local function startMain(size, textScale, isTiny)
+    launcherGui:Destroy()
+    local screenGui = Instance.new("ScreenGui", player.PlayerGui); screenGui.Name = "PisitFinalV44"; screenGui.ResetOnSpawn = false
+    local mainFrame = Instance.new("Frame", screenGui)
+    mainFrame.Size = size; mainFrame.Position = UDim2.new(0, 40, 0.3, 0); mainFrame.BackgroundColor3 = Theme.Background
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+    local mainStroke = Instance.new("UIStroke", mainFrame); mainStroke.Color = Theme.Accent; mainStroke.Thickness = 2
+
+    local topBarText = Instance.new("TextLabel", mainFrame)
+    topBarText.Size = UDim2.new(0.5, 0, 0, isTiny and 22 or 30); topBarText.Position = UDim2.new(0.05, 0, 0, 3); topBarText.BackgroundTransparency = 1
+    topBarText.Text = "PISIT UI"; topBarText.TextColor3 = Theme.Text; topBarText.TextScaled = true; topBarText.Font = Enum.Font.GothamBold
+
+    local lockBtn = Instance.new("TextButton", mainFrame)
+    lockBtn.Size = UDim2.new(0, isTiny and 20 or 26, 0, isTiny and 20 or 26); lockBtn.Position = UDim2.new(1, isTiny and -50 or -65, 0, 3); lockBtn.Text = "🔓"; lockBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); lockBtn.TextScaled = true; Instance.new("UICorner", lockBtn).CornerRadius = UDim.new(0, 4)
+    
+    local closeBtn = Instance.new("TextButton", mainFrame); closeBtn.Size = UDim2.new(0, isTiny and 20 or 26, 0, isTiny and 20 or 26); closeBtn.Position = UDim2.new(1, isTiny and -25 or -33, 0, 3); closeBtn.Text = "X"; closeBtn.BackgroundColor3 = Theme.Accent; closeBtn.TextScaled = true; Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
+    closeBtn.MouseButton1Click:Connect(function() _G.SelectedTarget = nil; _G.StickOn = false; _G.SkillOn = false; clearUI() end)
+
+    local isLocked = false
+    lockBtn.MouseButton1Click:Connect(function() isLocked = not isLocked; lockBtn.Text = isLocked and "🔒" or "🔓"; lockBtn.BackgroundColor3 = isLocked and Theme.Accent or Color3.fromRGB(30,30,30) end)
+
+    local skillGui = Instance.new("ScreenGui", player.PlayerGui); skillGui.Name = "SaitamaSkillGui"; skillGui.ResetOnSpawn = false
+    local skillBtn = Instance.new("TextButton", skillGui)
+    skillBtn.Size = UDim2.new(0, isTiny and 100 or 140, 0, isTiny and 30 or 40); skillBtn.Position = UDim2.new(0, 40, 0.18, 0); skillBtn.BackgroundColor3 = Theme.Container; skillBtn.Text = "⚡ สกิล 4"; skillBtn.TextScaled = true; skillBtn.Font = Enum.Font.GothamBold
+    skillBtn.TextColor3 = Theme.Text; Instance.new("UICorner", skillBtn).CornerRadius = UDim.new(0, 6)
+    local skillStroke = Instance.new("UIStroke", skillBtn); skillStroke.Color = Theme.Accent; skillStroke.Thickness = 1.5
+
+    local scroll = Instance.new("ScrollingFrame", mainFrame)
+    scroll.Size = UDim2.new(0.9, 0, isTiny and 0.65 or 0.68, 0); scroll.Position = UDim2.new(0.05, 0, isTiny and 0.28 or 0.13, 0); scroll.BackgroundTransparency = 0.3; scroll.BackgroundColor3 = Theme.Container; scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 4)
+    local scrollStroke = Instance.new("UIStroke", scroll); scrollStroke.Color = Color3.fromRGB(40, 40, 40); scrollStroke.Thickness = 1
+
+    local function applyRainbow(obj)
+        task.spawn(function() while obj and obj.Parent do for i=0,1,0.01 do if not obj.Parent then break end obj.BackgroundColor3=Color3.fromHSV(i,0.7,1); task.wait(0.03) end end end)
+    end
+
+    local function updateList()
+        for _, v in pairs(scroll:GetChildren()) do if not v:IsA("UIListLayout") and not v:IsA("UIStroke") then v:Destroy() end end
+        
+        local npc = Instance.new("TextButton", scroll); npc.Size = UDim2.new(1, -6, 0, isTiny and 26 or 36); npc.Text = "🤖 NPC ดัมมี่"; npc.TextScaled = true; npc.Font = Enum.Font.GothamBold; npc.TextColor3 = Color3.new(1,1,1)
+        Instance.new("UICorner", npc).CornerRadius = UDim.new(0, 4)
+        applyRainbow(npc); npc.MouseButton1Click:Connect(function() _G.SelectedTarget = workspace:FindFirstChild("Weakest Dummy", true) or workspace:FindFirstChild("Weakest Dummy"); updateList() end)
+
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Name ~= creatorName then
+                local b = Instance.new("TextButton", scroll); b.Size = UDim2.new(1, -6, 0, isTiny and 26 or 36); b.Text = "🎯 " .. p.DisplayName; b.TextScaled = true; b.Font = Enum.Font.GothamBold; b.TextColor3 = Theme.Text
+                Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+                
+                if _G.SelectedTarget == p then
+                    b.BackgroundColor3 = Theme.Accent
+                    local stroke = Instance.new("UIStroke", b); stroke.Color = Color3.fromRGB(255, 255, 255); stroke.Thickness = 1.5
+                else
+                    b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                    local stroke = Instance.new("UIStroke", b); stroke.Color = Color3.fromRGB(45, 45, 45); stroke.Thickness = 1
+                end
+
+                b.MouseButton1Click:Connect(function() _G.SelectedTarget = p; updateList() end)
+            elseif p.Name == creatorName then
+                local cBtn = Instance.new("TextButton", scroll); cBtn.Size = UDim2.new(1, -6, 0, isTiny and 26 or 36); cBtn.Text = "👑 " .. creatorName; cBtn.TextScaled = true; cBtn.Font = Enum.Font.GothamBold
+                Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 4)
+                applyRainbow(cBtn)
+                cBtn.MouseButton1Click:Connect(function() clickCount = clickCount + 1; if clickCount >= 11 then player:Kick("คุณพยายามล็อคเป้าผู้สร้างสคริปต์มากเกินไป!") else task.spawn(showWarning) end end)
+            end
+        end
+    end
+    task.spawn(function() while task.wait(3) do updateList() end end); updateList()
+
+    local toggleBtn = Instance.new("TextButton", mainFrame)
+    toggleBtn.Size = UDim2.new(0.9, 0, 0, isTiny and 28 or 38); toggleBtn.Position = UDim2.new(0.05, 0, 0.9, 0); toggleBtn.Text = "STICK: OFF"; toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); toggleBtn.TextColor3 = Theme.Text; toggleBtn.TextScaled = true; toggleBtn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
+    local toggleStroke = Instance.new("UIStroke", toggleBtn); toggleStroke.Color = Theme.Accent; toggleStroke.Thickness = 1.5
+
+    skillBtn.MouseButton1Click:Connect(function() if not _G.SelectedTarget then return end _G.SkillOn = not _G.SkillOn; _G.StickOn = false; skillBtn.BackgroundColor3 = _G.SkillOn and Color3.fromRGB(0, 200, 100) or Theme.Container end)
+    toggleBtn.MouseButton1Click:Connect(function() if not _G.SelectedTarget then return end _G.StickOn = not _G.StickOn; _G.SkillOn = false; toggleBtn.Text = _G.StickOn and "STICK: ON" or "STICK: OFF"; toggleBtn.BackgroundColor3 = _G.StickOn and Theme.Accent or Color3.fromRGB(30, 30, 30) end)
+
+    local function drag(o) 
+        local dragging, dragStart, startPos
+        o.InputBegan:Connect(function(input) if not isLocked and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then dragging = true; dragStart = input.Position; startPos = o.Position end end)
+        UIS.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then local delta = input.Position - dragStart; o.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
+        UIS.InputEnded:Connect(function() dragging = false end)
+    end
+    drag(mainFrame); drag(skillBtn)
+end
+
+-- ปุ่มเลือกขนาด (ขนาดเล็กจิ๋วสุดๆ / ขนาดกลางพอดี / ขนาดใหญ่เต็มตา และตัวอักษรย่อขยายตามจริง)
+createLBtn("ขนาดเล็ก", UDim2.new(0.075, 0, 0.22, 0), Color3.fromRGB(150, 20, 20), function()
+    startMain(UDim2.new(0, 120, 0, 180), 0.4, true)
+end)
+
+createLBtn("ขนาดกลาง", UDim2.new(0.075, 0, 0.47, 0), Theme.Accent, function()
+    startMain(UDim2.new(0, 210, 0, 300), 0.75, false)
+end)
+
+createLBtn("ขนาดใหญ่", UDim2.new(0.075, 0, 0.72, 0), Color3.fromRGB(255, 60, 60), function()
+    startMain(UDim2.new(0, 280, 0, 400), 1.0, false)
+end)
+
