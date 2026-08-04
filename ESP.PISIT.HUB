@@ -1,5 +1,5 @@
 -- ====================================================================
--- PISIT HUB | 3D Box ESP (Optimized Smooth Red-Black Theme with Toggle Support)
+-- PISIT HUB | 3D Box ESP (Self-Cleaning Version)
 -- ====================================================================
 
 local Players = game:GetService("Players")
@@ -7,13 +7,7 @@ local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- ป้องกันรันซ้ำซ้อน: ถ้ามีตัวเก่าค้างอยู่ ให้สั่งปิดและเคลียร์ทิ้งก่อนทันที
-if getgenv().PisitEspCleanup then
-    getgenv().PisitEspCleanup()
-end
-
 local boxes = {}
-local isRunning = true
 
 -- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น)
 local function createBox()
@@ -28,37 +22,35 @@ local function createBox()
     return boxLines
 end
 
--- ฟังก์ชันลบเส้นและทำลาย Drawing ทิ้งทั้งหมด
+-- ฟังก์ชันลบเส้นทิ้งทั้งหมด
 local function removeBox(boxLines)
     for _, line in ipairs(boxLines) do
         line:Remove()
     end
 end
 
--- ฟังก์ชันเคลียร์ระบบทั้งหมด (ใช้สำหรับสั่งปิดตัว ESP ออกจากเกมแบบเกลี้ยงๆ)
-local cleanupFunc = function()
-    isRunning = false
-    for player, boxLines in pairs(boxes) do
+-- สร้างฟังก์ชันล้างตัวเองเก็บไว้ในตัวแปรกลาง (เพื่อให้สคริปต์หลักสั่งปิดได้ทันที)
+local renderConnection
+local function cleanup()
+    if renderConnection then
+        renderConnection:Disconnect()
+        renderConnection = nil
+    end
+    for _, boxLines in pairs(boxes) do
         removeBox(boxLines)
     end
     table.clear(boxes)
-    if getgenv().PisitEspCleanup == cleanupFunc then
+    if getgenv then
         getgenv().PisitEspCleanup = nil
     end
 end
 
-getgenv().PisitEspCleanup = cleanupFunc
+if getgenv then
+    getgenv().PisitEspCleanup = cleanup
+end
 
--- เชื่อมต่อลูป RenderStepped
-local renderConnection
+-- ลูป RenderStepped วาดกล่อง ESP
 renderConnection = RunService.RenderStepped:Connect(function()
-    if not isRunning then
-        if renderConnection then
-            renderConnection:Disconnect()
-        end
-        return
-    end
-
     local activePlayers = Players:GetPlayers()
     
     for _, player in ipairs(activePlayers) do
@@ -84,18 +76,7 @@ renderConnection = RunService.RenderStepped:Connect(function()
                         cf * CFrame.new(-size.X, size.Y, size.Z),
                         cf * CFrame.new(-size.X, -size.Y, -size.Z),
                         cf * CFrame.new(size.X, -size.Y, -size.Z),
-                        cf * CFrame.new(size.X, -size.Y, size.Z),
-                        cf * CGrade and cf * CFrame.new(-size.X, -size.Y, size.Z) or cf * CFrame.new(-size.X, -size.Y, size.Z)
-                    }
-                    -- ใช้มุมคำนวณแบบมาตรฐานเดิม
-                    corners = {
-                        cf * CFrame.new(-size.X, size.Y, -size.Z),
-                        cf * CFrame.new(size.X, size.Y, -size.Z),
-                        cf * CFrame.new(size.X, size.Y, size.Z),
-                        cf * CFrame.new(-size.X, size.Y, size.Z),
-                        cf * CFrame.new(-size.X, -size.Y, -size.Z),
                         cf * CFrame.new(size.X, -size.Y, -size.Z),
-                        cf * CFrame.new(size.X, -size.Y, size.Z),
                         cf * CFrame.new(-size.X, -size.Y, size.Z)
                     }
                     
@@ -151,7 +132,6 @@ renderConnection = RunService.RenderStepped:Connect(function()
     end
 end)
 
--- จัดการเคลียร์เมมโมรี่เมื่อผู้เล่นออกเกม
 Players.PlayerRemoving:Connect(function(player)
     if boxes[player] then
         removeBox(boxes[player])
