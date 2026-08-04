@@ -1,0 +1,416 @@
+-- ====================================================================
+-- PISIT HUB AII อิสระ | Ultimate Multi-ESP System (Fixed 3D Box & NameESP)
+-- ====================================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+if CoreGui:FindFirstChild("PisitHubAII_ESP") then
+    CoreGui.PisitHubAII_ESP:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PisitHubAII_ESP"
+screenGui.Parent = CoreGui
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.ResetOnSpawn = false
+
+local selectedModes = {["1D"] = false, ["2D"] = false, ["3D"] = false}
+local selectedColorIndex = 1
+local isRunning = false
+
+local colorList = {
+    {Name = "🔴 แดงสด", Color = Color3.fromRGB(255, 0, 0)},
+    {Name = "🔵 น้ำเงิน", Color = Color3.fromRGB(0, 100, 255)},
+    {Name = "🟢 เขียวสด", Color = Color3.fromRGB(0, 255, 0)},
+    {Name = "🟡 เหลืองทอง", Color = Color3.fromRGB(255, 215, 0)},
+    {Name = "🟣 ม่วงเข้ม", Color = Color3.fromRGB(148, 0, 211)},
+    {Name = "🟠 ส้มสว่าง", Color = Color3.fromRGB(255, 140, 0)},
+    {Name = "🔵 ฟ้าคราม", Color = Color3.fromRGB(0, 255, 255)},
+    {Name = "🩷 ชมพูบานเย็น", Color = Color3.fromRGB(255, 20, 147)},
+    {Name = "🟢 เขียวมะนาว", Color = Color3.fromRGB(50, 205, 50)},
+    {Name = "⚪ ขาวบริสุทธิ์", Color = Color3.fromRGB(255, 255, 255)},
+    {Name = "🟤 น้ำตาลช็อกโกแลต", Color = Color3.fromRGB(139, 69, 19)},
+    {Name = "⚫ เทาเข้ม", Color = Color3.fromRGB(120, 120, 120)}
+}
+
+-- ====================================================================
+-- หน้าต่างที่ 1: เลือกมิติ
+-- ====================================================================
+local Window1 = Instance.new("Frame", screenGui)
+Window1.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Window1.BorderSizePixel = 0
+Window1.Position = UDim2.new(0.5, -140, 0.5, -110)
+Window1.Size = UDim2.new(0, 280, 0, 190)
+Window1.Active = true
+Window1.Draggable = true
+
+Instance.new("UICorner", Window1).CornerRadius = UDim.new(0, 10)
+local stroke1 = Instance.new("UIStroke", Window1)
+stroke1.Color = Color3.fromRGB(220, 20, 20)
+stroke1.Thickness = 2
+
+local grad1 = Instance.new("UIGradient", Window1)
+grad1.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 10, 10)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 5, 5))})
+grad1.Rotation = 45
+
+local T1 = Instance.new("TextLabel", Window1)
+T1.BackgroundTransparency = 1
+T1.Position = UDim2.new(0, 0, 0, 12)
+T1.Size = UDim2.new(1, 0, 0, 25)
+T1.Font = Enum.Font.GothamBold
+T1.Text = "PISIT HUB AII อิสระ"
+T1.TextColor3 = Color3.fromRGB(255, 255, 255)
+T1.TextSize = 15
+
+local modeButtons = {}
+local modes = {"1D", "2D", "3D"}
+for i, mName in ipairs(modes) do
+    local btn = Instance.new("TextButton", Window1)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Position = UDim2.new(0, 15 + ((i-1) * 85), 0, 55)
+    btn.Size = UDim2.new(0, 78, 0, 38)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = mName .. " [OFF]"
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 12
+    btn.BorderSizePixel = 0
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    
+    btn.MouseButton1Click:Connect(function()
+        selectedModes[mName] = not selectedModes[mName]
+        if selectedModes[mName] then
+            btn.BackgroundColor3 = Color3.fromRGB(200, 20, 20)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.Text = mName .. " [ON]"
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            btn.Text = mName .. " [OFF]"
+        end
+    end)
+    modeButtons[mName] = btn
+end
+
+local NextBtn1 = Instance.new("TextButton", Window1)
+NextBtn1.BackgroundColor3 = Color3.fromRGB(200, 20, 20)
+NextBtn1.Position = UDim2.new(0, 15, 0, 125)
+NextBtn1.Size = UDim2.new(1, -30, 0, 38)
+NextBtn1.Font = Enum.Font.GothamBold
+NextBtn1.Text = "ถัดไป"
+NextBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+NextBtn1.TextSize = 13
+NextBtn1.BorderSizePixel = 0
+Instance.new("UICorner", NextBtn1).CornerRadius = UDim.new(0, 6)
+
+
+-- ====================================================================
+-- หน้าต่างที่ 2: เลือกสี
+-- ====================================================================
+local Window2 = Instance.new("Frame", screenGui)
+Window2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Window2.BorderSizePixel = 0
+Window2.Position = UDim2.new(0.5, -140, 0.5, -205)
+Window2.Size = UDim2.new(0, 280, 0, 410)
+Window2.Active = true
+Window2.Draggable = true
+Window2.Visible = false
+
+Instance.new("UICorner", Window2).CornerRadius = UDim.new(0, 10)
+local stroke2 = Instance.new("UIStroke", Window2)
+stroke2.Color = Color3.fromRGB(220, 20, 20)
+stroke2.Thickness = 2
+local grad2 = Instance.new("UIGradient", Window2)
+grad2.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 10, 10)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 5, 5))})
+grad2.Rotation = 45
+
+local T2 = Instance.new("TextLabel", Window2)
+T2.BackgroundTransparency = 1
+T2.Position = UDim2.new(0, 0, 0, 12)
+T2.Size = UDim2.new(1, 0, 0, 25)
+T2.Font = Enum.Font.GothamBold
+T2.Text = "PISIT HUB AII อิสระ"
+T2.TextColor3 = Color3.fromRGB(255, 255, 255)
+T2.TextSize = 15
+
+local colorButtons = {}
+for i, colData in ipairs(colorList) do
+    local col = (i - 1) % 2
+    local row = math.floor((i - 1) / 2)
+    
+    local cBtn = Instance.new("TextButton", Window2)
+    cBtn.BackgroundColor3 = (i == selectedColorIndex) and Color3.fromRGB(100, 20, 20) or Color3.fromRGB(25, 25, 25)
+    cBtn.Position = UDim2.new(0, 15 + (col * 127), 0, 50 + (row * 31))
+    cBtn.Size = UDim2.new(0, 122, 0, 27)
+    cBtn.Font = Enum.Font.Gotham
+    cBtn.Text = colData.Name
+    cBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    cBtn.TextSize = 11
+    cBtn.BorderSizePixel = 0
+    Instance.new("UICorner", cBtn).CornerRadius = UDim.new(0, 5)
+    
+    local stroke = Instance.new("UIStroke", cBtn)
+    stroke.Color = (i == selectedColorIndex) and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(45, 45, 45)
+    
+    cBtn.MouseButton1Click:Connect(function()
+        selectedColorIndex = i
+        for idx, cb in pairs(colorButtons) do
+            cb.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            cb.UIStroke.Color = Color3.fromRGB(45, 45, 45)
+        end
+        cBtn.BackgroundColor3 = Color3.fromRGB(100, 20, 20)
+        stroke.Color = Color3.fromRGB(255, 0, 0)
+    end)
+    table.insert(colorButtons, cBtn)
+end
+
+local NextBtn2 = Instance.new("TextButton", Window2)
+NextBtn2.BackgroundColor3 = Color3.fromRGB(200, 20, 20)
+NextBtn2.Position = UDim2.new(0, 15, 0, 350)
+NextBtn2.Size = UDim2.new(1, -30, 0, 38)
+NextBtn2.Font = Enum.Font.GothamBold
+NextBtn2.Text = "ยืนยัน"
+NextBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+NextBtn2.TextSize = 13
+NextBtn2.BorderSizePixel = 0
+Instance.new("UICorner", NextBtn2).CornerRadius = UDim.new(0, 6)
+
+
+-- ====================================================================
+-- หน้าต่างที่ 3: UI เล็กกะทัดรัด สำหรับเปิด-ปิดระบบ
+-- ====================================================================
+local Window3 = Instance.new("Frame", screenGui)
+Window3.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Window3.BorderSizePixel = 0
+Window3.Position = UDim2.new(0.5, -100, 0.5, -45)
+Window3.Size = UDim2.new(0, 200, 0, 90)
+Window3.Active = true
+Window3.Draggable = true
+Window3.Visible = false
+
+Instance.new("UICorner", Window3).CornerRadius = UDim.new(0, 8)
+local stroke3 = Instance.new("UIStroke", Window3)
+stroke3.Color = Color3.fromRGB(220, 20, 20)
+stroke3.Thickness = 2
+local grad3 = Instance.new("UIGradient", Window3)
+grad3.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 10, 10)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 5, 5))})
+grad3.Rotation = 45
+
+local ToggleBtn = Instance.new("TextButton", Window3)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 20, 20)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 10)
+ToggleBtn.Size = UDim2.new(1, -20, 1, -20)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Text = "ESP [OFF]"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 13
+ToggleBtn.BorderSizePixel = 0
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
+
+
+-- เปลี่ยนหน้าต่าง
+NextBtn1.MouseButton1Click:Connect(function()
+    Window1.Visible = false
+    Window2.Visible = true
+end)
+
+NextBtn2.MouseButton1Click:Connect(function()
+    Window2.Visible = false
+    Window3.Visible = true
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    isRunning = not isRunning
+    if isRunning then
+        ToggleBtn.Text = "ESP [ON]"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
+    else
+        ToggleBtn.Text = "ESP [OFF]"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 20, 20)
+    end
+end)
+
+
+-- ====================================================================
+-- ระบบวาด Drawing ESP (แก้ไข 3D สมจริง + เพิ่มชื่อสีแดงปรับขนาดตามระยะ)
+-- ====================================================================
+local allEspData = {}
+
+local function setupPlayerESP()
+    local data = {
+        tracer = Drawing.new("Line"),
+        box2d = {},
+        box3d = {},
+        nameText = Drawing.new("Text")
+    }
+    data.tracer.Visible = false
+    data.tracer.Thickness = 1.5
+    
+    data.nameText.Visible = false
+    data.nameText.Size = 16
+    data.nameText.Center = true
+    data.nameText.Outline = true
+    data.nameText.Color = Color3.fromRGB(255, 20, 20) -- ชื่อสีแดง
+    
+    for i = 1, 4 do
+        local l = Drawing.new("Line")
+        l.Visible = false
+        l.Thickness = 1.5
+        table.insert(data.box2d, l)
+    end
+    for i = 1, 12 do
+        local l = Drawing.new("Line")
+        l.Visible = false
+        l.Thickness = 1.5
+        table.insert(data.box3d, l)
+    end
+    return data
+end
+
+Players.PlayerRemoving:Connect(function(player)
+    if allEspData[player] then
+        pcall(function()
+            allEspData[player].tracer:Remove()
+            allEspData[player].nameText:Remove()
+            for _, l in ipairs(allEspData[player].box2d) do l:Remove() end
+            for _, l in ipairs(allEspData[player].box3d) do l:Remove() end
+        end)
+        allEspData[player] = nil
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not isRunning then return end
+    
+    local chosenColor = colorList[selectedColorIndex].Color
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if not allEspData[player] then
+                allEspData[player] = setupPlayerESP()
+            end
+            
+            local data = allEspData[player]
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char and char:FindFirstChild("Humanoid")
+            local head = char and char:FindFirstChild("Head")
+            
+            data.tracer.Visible = false
+            data.nameText.Visible = false
+            for _, l in ipairs(data.box2d) do l.Visible = false end
+            for _, l in ipairs(data.box3d) do l.Visible = false end
+            
+            if char and root and humanoid and humanoid.Health > 0 then
+                if player.Team ~= LocalPlayer.Team or not LocalPlayer.Team then
+                    
+                    -- 1D Mode
+                    if selectedModes["1D"] then
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                        if onScreen then
+                            data.tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                            data.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
+                            data.tracer.Color = chosenColor
+                            data.tracer.Visible = true
+                        end
+                    end
+                    
+                    -- 2D Mode
+                    if selectedModes["2D"] then
+                        if head then
+                            local headPos, headVis = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                            local rootPos, rootVis = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+                            
+                            if headVis or rootVis then
+                                local height = math.abs(headPos.Y - rootPos.Y)
+                                local width = height / 2
+                                local centerPos = Camera:WorldToViewportPoint(root.Position)
+                                local boxX = centerPos.X - width / 2
+                                local boxY = math.min(headPos.Y, rootPos.Y)
+                                
+                                local linesConfig = {
+                                    {Vector2.new(boxX, boxY), Vector2.new(boxX + width, boxY)},
+                                    {Vector2.new(boxX + width, boxY), Vector2.new(boxX + width, boxY + height)},
+                                    {Vector2.new(boxX + width, boxY + height), Vector2.new(boxX, boxY + height)},
+                                    {Vector2.new(boxX, boxY + height), Vector2.new(boxX, boxY)}
+                                }
+                                
+                                for i, pts in ipairs(linesConfig) do
+                                    local l = data.box2d[i]
+                                    l.From = pts[1]
+                                    l.To = pts[2]
+                                    l.Color = chosenColor
+                                    l.Visible = true
+                                end
+                            end
+                        end
+                    end
+                    
+                    -- 3D Mode (แก้ไขใหม่: ใช้ anyVis ให้แสดงผลลื่นไหล ไม่หลุดขอบจอ)
+                    if selectedModes["3D"] then
+                        local cf = root.CFrame
+                        local size3D = Vector3.new(2.2, 4.8, 2.2)
+                        local corners = {
+                            cf * CFrame.new(-size3D.X, size3D.Y, -size3D.Z),
+                            cf * CFrame.new(size3D.X, size3D.Y, -size3D.Z),
+                            cf * CFrame.new(size3D.X, size3D.Y, size3D.Z),
+                            cf * CFrame.new(-size3D.X, size3D.Y, size3D.Z),
+                            cf * CFrame.new(-size3D.X, -size3D.Y, -size3D.Z),
+                            cf * CFrame.new(size3D.X, -size3D.Y, -size3D.Z),
+                            cf * CFrame.new(size3D.X, -size3D.Y, size3D.Z),
+                            cf * CFrame.new(-size3D.X, -size3D.Y, size3D.Z)
+                        }
+                        
+                        local screenPoints = {}
+                        local anyVis = false
+                        for i, corner in ipairs(corners) do
+                            local sp, onScreen = Camera:WorldToViewportPoint(corner.Position)
+                            if onScreen then
+                                anyVis = true
+                            end
+                            screenPoints[i] = Vector2.new(sp.X, sp.Y)
+                        end
+                        
+                        if anyVis then
+                            local connections = {
+                                {1,2}, {2,3}, {3,4}, {4,1},
+                                {5,6}, {6,7}, {7,8}, {8,5},
+                                {1,5}, {2,6}, {3,7}, {4,8}
+                            }
+                            for i, conn in ipairs(connections) do
+                                local l = data.box3d[i]
+                                if l and screenPoints[conn[1]] and screenPoints[conn[2]] then
+                                    l.From = screenPoints[conn[1]]
+                                    l.To = screenPoints[conn[2]]
+                                    l.Color = chosenColor
+                                    l.Visible = true
+                                end
+                            end
+                        end
+                    end
+
+                    -- แสดงชื่อบนหัว (สีแดง ปรับขนาดตามระยะทาง)
+                    if head then
+                        local distance = (Camera.CFrame.Position - root.Position).Magnitude
+                        local dynamicSize = math.clamp(math.floor(2200 / distance), 10, 18)
+                        
+                        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.2, 0))
+                        if headOnScreen then
+                            data.nameText.Text = player.DisplayName or player.Name
+                            data.nameText.Size = dynamicSize
+                            data.nameText.Position = Vector2.new(headPos.X, headPos.Y)
+                            data.nameText.Visible = true
+                        else
+                            data.nameText.Visible = false
+                        end
+                    end
+
+                end
+            end
+        end
+    end
+end)
+
