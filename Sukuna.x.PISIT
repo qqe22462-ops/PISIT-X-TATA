@@ -1,0 +1,481 @@
+if game:GetService("CoreGui"):FindFirstChild("PisitSukunaUI") then
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "แจ้งเตือน",
+		Text = "สคริปต์นี้ถูกรันไปแล้ว!",
+		Duration = 3,
+		Button1 = "รับทราบ"
+	})
+	return
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+local TextChatService = game:GetService("TextChatService")
+local Chat = game:GetService("Chat")
+
+local player = Players.LocalPlayer
+
+task.spawn(function()
+	task.wait(3)
+	pcall(function()
+		if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			local channels = TextChatService:WaitForChild("TextChannels", 2)
+			if channels then
+				local general = channels:FindFirstChild("RBXGeneral")
+				if general then
+					general:SendAsync("-r6")
+					return
+				end
+			end
+		end
+		Chat:Chat(player.Character or player.CharacterAdded:Wait(), "-r6", Enum.ChatColor.Red)
+	end)
+end)
+
+task.wait(5)
+
+if not isfile("Sukuna.rbxmx") then
+	writefile("Sukuna.rbxmx", game:HttpGet("https://github.com/ian49972/RBXMS/raw/refs/heads/main/Sukuna.rbxmx"))
+end
+writefile("SUKUNA.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/SUKUNA.mp3"))
+writefile("LAUGH.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/LAUGH.mp3"))
+writefile("ArrowExplode.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/ArrowExplode.mp3"))
+writefile("Furnance.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Furnance.mp3"))
+writefile("HAHAHA.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/HAHAHA.mp3"))
+writefile("SLASH.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/SLASH.mp3"))
+
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+local camera = workspace.CurrentCamera
+
+local EasingStyleMap = {
+	[Enum.PoseEasingStyle.Linear]   = Enum.EasingStyle.Linear,
+	[Enum.PoseEasingStyle.Bounce]   = Enum.EasingStyle.Bounce,
+	[Enum.PoseEasingStyle.Cubic]    = Enum.EasingStyle.Cubic,
+	[Enum.PoseEasingStyle.Elastic]  = Enum.EasingStyle.Elastic,
+	[Enum.PoseEasingStyle.Constant] = Enum.EasingStyle.Linear,
+}
+
+local EasingDirectionMap = {
+	[Enum.PoseEasingDirection.In]    = Enum.EasingDirection.In,
+	[Enum.PoseEasingDirection.Out]   = Enum.EasingDirection.Out,
+	[Enum.PoseEasingDirection.InOut] = Enum.EasingDirection.InOut,
+}
+
+local function PlayKeyframeSequence(Model, KeyframeSequence, SpeedMult)
+	SpeedMult = SpeedMult or 1
+	local keyframes = {}
+	for _, kf in ipairs(KeyframeSequence:GetKeyframes()) do
+		table.insert(keyframes, {Time = kf.Time, KF = kf})
+	end
+	table.sort(keyframes, function(a,b) return a.Time < b.Time end)
+	if #keyframes == 0 then return end
+
+	local motorMap, boneMap, valueMap, tweenList = {}, {}, {}, {}
+
+	local function ResolveInstance(pose)
+		local name = pose.Name
+		if motorMap[name] then return motorMap[name], "Motor6D" end
+		if boneMap[name] then return boneMap[name], "Bone" end
+
+		for _, motor in ipairs(Model:GetDescendants()) do
+			if motor:IsA("Motor6D") and motor.Part1 and motor.Part0 then
+				if motor.Part1.Name == name and motor.Part0.Name == pose.Parent.Name then
+					motorMap[name] = motor
+					return motor, "Motor6D"
+				end
+			end
+		end
+		for _, bone in ipairs(Model:GetDescendants()) do
+			if bone:IsA("Bone") and bone.Name == name and bone.Parent and bone.Parent.Name == pose.Parent.Name then
+				boneMap[name] = bone
+				return bone, "Bone"
+			end
+		end
+		return nil, nil
+	end
+
+	local poseTables = {}
+	for i, entry in ipairs(keyframes) do
+		local tab = {Time = entry.Time, Poses = {}}
+		for _, pose in ipairs(entry.KF:GetDescendants()) do
+			if pose:IsA("Pose") and pose.Weight > 0 then
+				local instance, typ = ResolveInstance(pose)
+				if instance then
+					if not valueMap[pose.Name] then
+						local val = Instance.new("CFrameValue")
+						val.Name = "AnimValue"
+						val.Parent = instance
+						valueMap[pose.Name] = val
+					end
+					tab.Poses[pose.Name] = { Instance = instance, Type = typ, CFrame = pose.CFrame, Style = pose.EasingStyle, Dir = pose.EasingDirection }
+				end
+			end
+		end
+		poseTables[i] = tab
+	end
+
+	for i = 1, #poseTables-1 do
+		local kf1, kf2 = poseTables[i], poseTables[i+1]
+		local duration = (kf2.Time - kf1.Time) / SpeedMult
+		local group = {Duration = duration, Tweens = {}}
+		for name, data2 in pairs(kf2.Poses) do
+			local data1 = kf1.Poses[name] or poseTables[1].Poses[name]
+			if data1 then
+				local ti = TweenInfo.new(duration, EasingStyleMap[data2.Style] or Enum.EasingStyle.Linear, EasingDirectionMap[data2.Dir] or Enum.EasingDirection.InOut)
+				group.Tweens[name] = TweenService:Create(valueMap[name], ti, {Value = data2.CFrame})
+			end
+		end
+		table.insert(tweenList, group)
+	end
+
+	local heartbeatConn = RunService.Heartbeat:Connect(function()
+		for name, valObj in pairs(valueMap) do
+			local entry = poseTables[1].Poses[name]
+			if entry then entry.Instance.Transform = valObj.Value end
+		end
+	end)
+
+	local playing = true
+	local function PlayOnce()
+		for _, group in ipairs(tweenList) do
+			for _, tween in pairs(group.Tweens) do tween:Play() end
+			task.wait(group.Duration)
+		end
+	end
+
+	task.spawn(function()
+		while playing and Model and Model.Parent do
+			PlayOnce()
+			task.wait()
+		end
+	end)
+
+	return {
+		Stop = function()
+			playing = false
+			if heartbeatConn then heartbeatConn:Disconnect() end
+			for _, group in ipairs(tweenList) do
+				for _, tween in pairs(group.Tweens) do tween:Cancel() end
+			end
+			for _, v in pairs(valueMap) do v:Destroy() end
+		end
+	}
+end
+
+local animModel = game:GetObjects(getcustomasset("Sukuna.rbxmx"))[1]
+animModel.Parent = ReplicatedStorage
+local AnimsFolder = animModel:WaitForChild("Anims")
+local EffectsFolder = animModel:WaitForChild("Effects")
+local DomainFolder = EffectsFolder:WaitForChild("Domain")
+local FurnanceFolder = EffectsFolder:WaitForChild("Furnance")
+
+local malevolentShrine = DomainFolder:FindFirstChild("MalevolentShrine", true)
+local awakenKeyframe = AnimsFolder:FindFirstChild("Awaken", true)
+local shrineKeyframe = AnimsFolder:FindFirstChild("Shrine", true)
+
+local FX = DomainFolder:FindFirstChild("FX", true)
+local GroundFX = DomainFolder:FindFirstChild("GroundFX", true)
+local Attachment1 = DomainFolder:FindFirstChild("Attachment", true)
+local Attachment2 = DomainFolder:FindFirstChild("Attachment2", true)
+local RedAttachment = FurnanceFolder:FindFirstChild("Red")
+local BlackAttachment = FurnanceFolder:FindFirstChild("Black")
+
+local leftHandle, rightHandle, leftFingerMotor, rightFingerMotor
+
+local function startEffects()
+	local shakeConn = RunService.RenderStepped:Connect(function()
+		local rx = (math.random() - 0.5) * 0.08
+		local ry = (math.random() - 0.5) * 0.08
+		local rz = (math.random() - 0.5) * 0.06
+		camera.CFrame = camera.CFrame * CFrame.Angles(rx, ry, rz)
+	end)
+	return shakeConn
+end
+
+local function hideFingers()
+	if leftHandle then
+		for _, part in ipairs(leftHandle:GetDescendants()) do
+			if part:IsA("BasePart") then part.Transparency = 1 part.CanCollide = false end
+		end
+	end
+	if rightHandle then
+		for _, part in ipairs(rightHandle:GetDescendants()) do
+			if part:IsA("BasePart") then part.Transparency = 1 part.CanCollide = false end
+		end
+	end
+end
+
+local function destroyFingers()
+	if leftFingerMotor then leftFingerMotor:Destroy() leftFingerMotor = nil end
+	if rightFingerMotor then rightFingerMotor:Destroy() rightFingerMotor = nil end
+	if leftHandle then leftHandle:Destroy() leftHandle = nil end
+	if rightHandle then rightHandle:Destroy() rightHandle = nil end
+end
+
+local function spawnFingers(assetId)
+	destroyFingers()
+	local ok, model = pcall(function() return game:GetObjects(assetId)[1] end)
+	if not ok or not model then return end
+	leftHandle = model:FindFirstChild("LeftHandle")
+	rightHandle = model:FindFirstChild("RightHandle")
+	if not (leftHandle and rightHandle) then model:Destroy() return end
+
+	local leftArm = character:FindFirstChild("Left Arm") or character:FindFirstChild("LeftUpperArm")
+	local rightArm = character:FindFirstChild("Right Arm") or character:FindFirstChild("RightUpperArm")
+	local skinColor = (leftArm and leftArm.Color) or (rightArm and rightArm.Color) or Color3.fromRGB(255, 204, 153)
+	local handOffset = CFrame.new(0, -0.85, 0)
+
+	for _, part in pairs(leftHandle:GetDescendants()) do if part:IsA("BasePart") then part.Color = skinColor end end
+	leftFingerMotor = Instance.new("Motor6D")
+	leftFingerMotor.Name = "LeftFingerJoint"
+	leftFingerMotor.Part0 = leftArm
+	leftFingerMotor.Part1 = leftHandle:FindFirstChildWhichIsA("BasePart") or leftHandle
+	leftFingerMotor.C0 = handOffset
+	leftFingerMotor.Parent = leftArm
+	leftHandle.Parent = character
+
+	for _, part in pairs(rightHandle:GetDescendants()) do if part:IsA("BasePart") then part.Color = skinColor end end
+	rightFingerMotor = Instance.new("Motor6D")
+	rightFingerMotor.Name = "RightFingerJoint"
+	rightFingerMotor.Part0 = rightArm
+	rightFingerMotor.Part1 = rightHandle:FindFirstChildWhichIsA("BasePart") or rightHandle
+	rightFingerMotor.C0 = handOffset
+	rightFingerMotor.Parent = rightArm
+	rightHandle.Parent = character
+	model:Destroy()
+end
+
+local function tweenShrine(fromCF, toCF, time, onDone)
+	local startTime = tick()
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		local alpha = math.clamp((tick() - startTime) / time, 0, 1)
+		malevolentShrine:PivotTo(fromCF:Lerp(toCF, alpha))
+		if alpha >= 1 then
+			conn:Disconnect()
+			if onDone then onDone() end
+		end
+	end)
+end
+
+local function resetShrine()
+	if FX then FX.Parent = nil end
+	if GroundFX then GroundFX.Parent = nil end
+	TweenService:Create(Lighting, TweenInfo.new(2, Enum.EasingStyle.Sine), {ClockTime = 14}):Play()
+	if malevolentShrine.Parent == workspace then
+		local current = malevolentShrine:GetPivot()
+		local down = current * CFrame.new(0, -60, 0)
+		tweenShrine(current, down, 2, function()
+			malevolentShrine.Parent = ReplicatedStorage
+		end)
+	end
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PisitSukunaUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -110, 0.5, -60)
+MainFrame.Size = UDim2.new(0, 220, 0, 100)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+local Stroke = Instance.new("UIStroke", MainFrame)
+Stroke.Color = Color3.fromRGB(200, 15, 15)
+Stroke.Thickness = 2
+
+local Grad = Instance.new("UIGradient", MainFrame)
+Grad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 10, 10)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
+})
+Grad.Rotation = 45
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "PISIT HUB x Sukuna"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 15
+
+local ActionBtn = Instance.new("TextButton", MainFrame)
+ActionBtn.Size = UDim2.new(1, -20, 0, 40)
+ActionBtn.Position = UDim2.new(0, 10, 0, 45)
+ActionBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+ActionBtn.Font = Enum.Font.GothamBold
+ActionBtn.Text = "แปลงร่าง"
+ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActionBtn.TextSize = 14
+ActionBtn.BorderSizePixel = 0
+Instance.new("UICorner", ActionBtn).CornerRadius = UDim.new(0, 6)
+
+local step = 1
+
+ActionBtn.MouseButton1Click:Connect(function()
+	if step == 1 then
+		step = 2
+		ActionBtn.Text = "กำลังแปลงร่าง"
+		ActionBtn.BackgroundColor3 = Color3.fromRGB(100, 10, 10)
+		ActionBtn.Active = false
+
+		local head = character:FindFirstChild("Head")
+		if head and not head:FindFirstChild("SukunaFace") then
+			local decal = Instance.new("Decal")
+			decal.Name = "SukunaFace"
+			decal.Texture = "rbxassetid://16324571117"
+			decal.Face = Enum.NormalId.Front
+			decal.Parent = head
+			decal.Transparency = 1
+			TweenService:Create(decal, TweenInfo.new(1), {Transparency = 0}):Play()
+		end
+
+		local laughSound = Instance.new("Sound")
+		laughSound.SoundId = getcustomasset("LAUGH.mp3")
+		laughSound.Volume = 1
+		laughSound.Parent = workspace
+		laughSound:Play()
+
+		hrp.Anchored = true
+		local animator = humanoid:FindFirstChildOfClass("Animator")
+		if animator then animator:Destroy() end
+
+		local animPlayer = awakenKeyframe and PlayKeyframeSequence(character, awakenKeyframe, 1.1)
+
+		task.spawn(function()
+			task.wait(13)
+			local shirt = character:FindFirstChildOfClass("Shirt")
+			if shirt then shirt:Destroy() end
+		end)
+
+		task.wait(14)
+		if animPlayer then animPlayer.Stop() end
+		if not humanoid:FindFirstChildOfClass("Animator") then
+			Instance.new("Animator", humanoid)
+		end
+		hrp.Anchored = false
+
+		ActionBtn.Text = "กางอาณาเขต"
+		ActionBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+		ActionBtn.Active = true
+
+	elseif step == 2 then
+		step = 3
+		ActionBtn.Text = "กำลังกางอาณาเขต"
+		ActionBtn.BackgroundColor3 = Color3.fromRGB(100, 10, 10)
+		ActionBtn.Active = false
+
+		local sfx = Instance.new("Sound")
+		sfx.SoundId = getcustomasset("SUKUNA.mp3")
+		sfx.Volume = 1
+		sfx.Parent = workspace
+		sfx:Play()
+
+		spawnFingers("rbxassetid://18637374258")
+
+		if shrineKeyframe then
+			local animator = humanoid:FindFirstChildOfClass("Animator")
+			if animator then animator:Destroy() end
+			hrp.Anchored = true
+			local domainAnimPlayer = PlayKeyframeSequence(character, shrineKeyframe, 1)
+
+			task.delay(4, function()
+				if domainAnimPlayer then domainAnimPlayer.Stop() end
+				local red = RedAttachment and RedAttachment:Clone()
+				if red then red.Parent = hrp task.delay(3, function() if red then red:Destroy() end end) end
+
+				task.delay(3, function()
+					local black = BlackAttachment and BlackAttachment:Clone()
+					if black then
+						black.Parent = hrp
+						task.delay(2, function()
+							if black then black:Destroy() end
+							if Attachment1 then Attachment1.Parent = hrp end
+							if Attachment2 then Attachment2.Parent = hrp end
+							for _, att in pairs({Attachment1, Attachment2}) do
+								if att then
+									for _, p in ipairs(att:GetChildren()) do
+										if p:IsA("ParticleEmitter") then
+											p.Enabled = true
+											task.delay(0.5, function() if p and p.Parent then p.Enabled = false end end)
+										end
+									end
+								end
+							end
+						end)
+					end
+				end)
+			end)
+
+			task.delay(20, function()
+				if not humanoid:FindFirstChildOfClass("Animator") then Instance.new("Animator", humanoid) end
+				hrp.Anchored = false
+				hideFingers()
+				destroyFingers()
+				for _, att in pairs({Attachment1, Attachment2}) do
+					if att then
+						for _, p in ipairs(att:GetChildren()) do
+							if p:IsA("ParticleEmitter") then p.Enabled = false end
+						end
+					end
+				end
+			end)
+		end
+
+		task.wait(7)
+		if malevolentShrine.Parent ~= workspace then malevolentShrine.Parent = workspace end
+		TweenService:Create(Lighting, TweenInfo.new(2), {ClockTime = 0}):Play()
+
+		local back = hrp.CFrame - hrp.CFrame.LookVector * 25
+		local endPos = back.Position + Vector3.new(0, 1, 0)
+		local targetCF = CFrame.new(endPos, endPos + hrp.CFrame.LookVector)
+		local startCF = targetCF * CFrame.new(0, -100, 0)
+
+		malevolentShrine:PivotTo(startCF)
+		local rockPart = malevolentShrine:FindFirstChild("Rock2", true) or malevolentShrine:FindFirstChild("Rocks2", true)
+		local beam = rockPart and rockPart:FindFirstChildWhichIsA("Beam")
+		if beam then beam.Enabled = true end
+
+		task.wait(2)
+		tweenShrine(startCF, targetCF, 3, function()
+			task.wait(2)
+			local shakeConn = startEffects()
+			local shrine2 = malevolentShrine:FindFirstChild("Shrine2", true)
+			if shrine2 and shrine2:IsA("MeshPart") then
+				local centerCF = shrine2.CFrame
+				if FX then FX.Parent = workspace FX.CFrame = centerCF end
+				if GroundFX then GroundFX.Parent = workspace GroundFX.CFrame = centerCF * CFrame.new(0, -35, 0) end
+			end
+			if beam then beam.Enabled = false end
+
+			task.delay(32, function()
+				if shakeConn then shakeConn:Disconnect() end
+				resetShrine()
+			end)
+		end)
+
+		task.wait(3)
+		ScreenGui:Destroy()
+	end
+end)
+
+StarterGui:SetCore("SendNotification", {
+	Title = "PISIT HUB x Sukuna",
+	Text = "ระบบแปลงร่างและกางอาณาเขตพร้อมใช้งานแล้วเพื่อน!",
+	Duration = 4,
+	Button1 = "ลุย"
+})
