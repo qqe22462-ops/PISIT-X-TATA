@@ -1,0 +1,124 @@
+-- ====================================================================
+-- PISIT HUB | 3D Box ESP (Optimized Smooth Red-Black Theme)
+-- ====================================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local boxes = {}
+
+-- ฟังก์ชันสร้างกล่อง 3 มิติ (12 เส้น)
+local function createBox()
+    local boxLines = {}
+    for i = 1, 12 do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        line.Thickness = 1.8 -- เพิ่มความหนาให้เส้นดูเด่นชัดและสวยขึ้น
+        line.Transparency = 1
+        table.insert(boxLines, line)
+    end
+    return boxLines
+end
+
+-- ลบเส้นทิ้งเวลาผู้เล่นออกเกม
+local function removeBox(boxLines)
+    for _, line in ipairs(boxLines) do
+        line:Remove()
+    end
+end
+
+-- อัปเดตตำแหน่งกล่อง 3 มิติแบบ Real-time ทุกเฟรม (เน้นความลื่นไหล ไม่กระตุก)
+RunService.RenderStepped:Connect(function()
+    local activePlayers = Players:GetPlayers()
+    
+    for _, player in ipairs(activePlayers) do
+        if player ~= LocalPlayer then
+            if not boxes[player] then
+                boxes[player] = createBox()
+            end
+            
+            local boxLines = boxes[player]
+            local character = player.Character
+            local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+            local humanoid = character and character:FindFirstChild("Humanoid")
+            
+            if character and humanoidRootPart and humanoid and humanoid.Health > 0 then
+                -- เช็คทีม (คนละทีมถึงจะแสดงผล)
+                if player.Team ~= LocalPlayer.Team or not LocalPlayer.Team then
+                    local cf = humanoidRootPart.CFrame
+                    local size = Vector3.new(3.4, 5.4, 3.4) -- ขยายขนาดกล่องให้ใหญ่ขึ้นครอบตัวละครได้สะใจขึ้น
+                    
+                    -- คำนวณจุดมุมทั้ง 8 ของกล่อง 3D
+                    local corners = {
+                        cf * CFrame.new(-size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, -size.Z),
+                        cf * CFrame.new(size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, -size.Z),
+                        cf * CFrame.new(size.X, -size.Y, size.Z),
+                        cf * CFrame.new(-size.X, -size.Y, size.Z)
+                    }
+                    
+                    local screenPoints = {}
+                    local allVisible = true
+                    
+                    for i, corner in ipairs(corners) do
+                        local screenPoint, onScreen = Camera:WorldToViewportPoint(corner.Position)
+                        if not onScreen then
+                            allVisible = false
+                            break
+                        end
+                        screenPoints[i] = Vector2.new(screenPoint.X, screenPoint.Y)
+                    end
+                    
+                    if allVisible then
+                        local connections = {
+                            {1,2}, {2,3}, {3,4}, {4,1}, -- ฝั่งบน
+                            {5,6}, {6,7}, {7,8}, {8,5}, -- ฝั่งล่าง
+                            {1,5}, {2,6}, {3,7}, {4,8}  -- เส้นเชื่อมแนวตั้ง
+                        }
+                        
+                        for i, conn in ipairs(connections) do
+                            local line = boxLines[i]
+                            line.From = screenPoints[conn[1]]
+                            line.To = screenPoints[conn[2]]
+                            
+                            -- จัดระเบียบสลับสี แดง และ ดำ สลับเส้นกันอย่างลงตัวแบบสมูท
+                            if i % 2 == 0 then
+                                line.Color = Color3.fromRGB(255, 20, 20) -- สีแดงสด
+                            else
+                                line.Color = Color3.fromRGB(10, 10, 10) -- สีดำเข้มตัดขอบ
+                            end
+                            
+                            line.Visible = true
+                        end
+                    else
+                        for _, line in ipairs(boxLines) do
+                            line.Visible = false
+                        end
+                    end
+                else
+                    for _, line in ipairs(boxLines) do
+                        line.Visible = false
+                    end
+                end
+            else
+                for _, line in ipairs(boxLines) do
+                    line.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- จัดการเคลียร์เมมโมรี่เมื่อผู้เล่นออกเกม
+Players.PlayerRemoving:Connect(function(player)
+    if boxes[player] then
+        removeBox(boxes[player])
+        boxes[player] = nil
+    end
+end)
+
