@@ -42,7 +42,7 @@ task.wait(5)
 if not isfile("Sukuna.rbxmx") then
 	writefile("Sukuna.rbxmx", game:HttpGet("https://github.com/ian49972/RBXMS/raw/refs/heads/main/Sukuna.rbxmx"))
 end
-writefile("SUKUNA.mp3", game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Test Mukuna.mp3"))
+writefile("SUKUNA.mp3", game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/ZXTAta/refs/heads/main/Sukuna.v1.mp3"))
 writefile("LAUGH.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/LAUGH.mp3"))
 writefile("ArrowExplode.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/ArrowExplode.mp3"))
 writefile("Furnance.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Furnance.mp3"))
