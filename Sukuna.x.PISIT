@@ -4,10 +4,10 @@
 
 if game:GetService("CoreGui"):FindFirstChild("PisitSukunaUI") then
 	game:GetService("StarterGui"):SetCore("SendNotification", {
-		Title = "แจ้งเตือน",
-		Text = "สคริปต์นี้ถูกรันไปแล้ว!",
+		Title = "แจ้งเตือนเว้ย",
+		Text = "สคริปต์นี้ถูกรันไปแล้ว",
 		Duration = 3,
-		Button1 = "รับทราบ"
+		Button1 = "เออกูรู้"
 	})
 	return
 end
