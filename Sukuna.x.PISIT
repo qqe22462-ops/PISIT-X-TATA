@@ -1,3 +1,7 @@
+-- ====================================================================
+-- PISIT HUB x Sukuna (Infinite Domain Expansion Edition)
+-- ====================================================================
+
 if game:GetService("CoreGui"):FindFirstChild("PisitSukunaUI") then
 	game:GetService("StarterGui"):SetCore("SendNotification", {
 		Title = "แจ้งเตือน",
@@ -468,14 +472,18 @@ ActionBtn.MouseButton1Click:Connect(function()
 			end)
 		end)
 
+		-- คืนปุ่มให้กลับมากางอาณาเขตใหม่วนซ้ำได้เรื่อยๆ
 		task.wait(3)
-		ScreenGui:Destroy()
+		ActionBtn.Text = "กางอาณาเขต"
+		ActionBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+		ActionBtn.Active = true
+		step = 2
 	end
 end)
 
 StarterGui:SetCore("SendNotification", {
 	Title = "PISIT HUB x Sukuna",
-	Text = "ระบบแปลงร่างและกางอาณาเขตพร้อมใช้งานแล้วเพื่อน!",
+	Text = "ระบบกลางอาณาเขตสุคุนะ",
 	Duration = 4,
-	Button1 = "ลุย"
+	Button1 = "เออไอ่เหี้ย"
 })
