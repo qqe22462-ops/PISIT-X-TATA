@@ -1,0 +1,604 @@
+-- ====================================================================
+-- PISIT HUB x Gojo / Murasaki (Extreme Ragdoll Knockback Edition)
+-- ====================================================================
+
+if game:GetService("CoreGui"):FindFirstChild("PisitGojoRagdollUI") then
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "แจ้งเตือน",
+		Text = "สคริปต์นี้ถูกรันไปแล้ว!",
+		Duration = 3,
+		Button1 = "รับทราบ"
+	})
+	return
+end
+
+-- โหลดไฟล์และเสียงทั้งหมดล่วงหน้า
+if not isfile("Gojo.rbxmx") then
+	writefile("Gojo.rbxmx", game:HttpGet("https://github.com/ian49972/RBXMS/raw/refs/heads/main/Gojo.rbxmx"))
+end
+
+writefile("Purple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Purple.mp3"))
+writefile("UnlimitedPurple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/UnlimitedPurple.mp3"))
+writefile("ImaginaryPurple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/ImaginaryPurple.mp3"))
+writefile("Domain.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Domain.mp3"))
+writefile("Honored.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Honored.mp3"))
+
+local Players = game:GetService("Players")
+local TS = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
+local TextChatService = game:GetService("TextChatService")
+local Chat = game:GetService("Chat")
+local Debris = game:GetService("Debris")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 1. พิมพ์คำสั่ง -r6 ทันทีที่รันสคริปต์
+pcall(function()
+	if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+		local channels = TextChatService:WaitForChild("TextChannels", 2)
+		if channels then
+			local general = channels:FindFirstChild("RBXGeneral")
+			if general then
+				general:SendAsync("-r6")
+			end
+		end
+	else
+		Chat:Chat(player.Character or player.CharacterAdded:Wait(), "-r6", Enum.ChatColor.Blue)
+	end
+end)
+
+local EasingStyleMap = {
+	[Enum.PoseEasingStyle.Linear]   = Enum.EasingStyle.Linear,
+	[Enum.PoseEasingStyle.Bounce]   = Enum.EasingStyle.Bounce,
+	[Enum.PoseEasingStyle.Cubic]    = Enum.EasingStyle.Cubic,
+	[Enum.PoseEasingStyle.Elastic]  = Enum.EasingStyle.Elastic,
+	[Enum.PoseEasingStyle.Constant] = Enum.EasingStyle.Linear,
+}
+
+local EasingDirectionMap = {
+	[Enum.PoseEasingDirection.In]    = Enum.EasingDirection.In,
+	[Enum.PoseEasingDirection.Out]   = Enum.EasingDirection.Out,
+	[Enum.PoseEasingDirection.InOut] = Enum.EasingDirection.InOut,
+}
+
+local function PlayKeyframeSequence(Model, KeyframeSequence, SpeedMult)
+	SpeedMult = SpeedMult or 1
+	local keyframes = {}
+	for _, kf in ipairs(KeyframeSequence:GetKeyframes()) do
+		table.insert(keyframes, {Time = kf.Time, KF = kf})
+	end
+	table.sort(keyframes, function(a,b) return a.Time < b.Time end)
+
+	if #keyframes == 0 then return end
+
+	local jointData = {}     
+	local motorMap = {}
+	local boneMap = {}
+
+	local function ResolveJoint(pose)
+		local name = pose.Name
+		if motorMap[name] then return motorMap[name], "Motor6D" end
+		if boneMap[name] then return boneMap[name], "Bone" end
+
+		for _, v in ipairs(Model:GetDescendants()) do
+			if v:IsA("Motor6D") and v.Part1 and v.Part1.Name == name then
+				motorMap[name] = v
+				return v, "Motor6D"
+			elseif v:IsA("Bone") and v.Name == name then
+				boneMap[name] = v
+				return v, "Bone"
+			end
+		end
+		return nil, nil
+	end
+
+	for _, entry in ipairs(keyframes) do
+		for _, pose in ipairs(entry.KF:GetDescendants()) do
+			if pose:IsA("Pose") and pose.Weight > 0 then
+				local joint, jtype = ResolveJoint(pose)
+				if joint then
+					if not jointData[pose.Name] then jointData[pose.Name] = {} end
+					table.insert(jointData[pose.Name], {
+						time = entry.Time,
+						cframe = pose.CFrame,
+						style = pose.EasingStyle,
+						dir = pose.EasingDirection,
+						joint = joint,
+						jtype = jtype
+					})
+				end
+			end
+		end
+	end
+
+	local totalLength = keyframes[#keyframes].Time / SpeedMult
+	local isPlaying = true
+	local startTime = os.clock()
+	local connection
+
+	connection = RunService.Heartbeat:Connect(function()
+		if not isPlaying or not Model or not Model.Parent then
+			if connection then connection:Disconnect() end
+			return
+		end
+
+		local elapsed = (os.clock() - startTime) * SpeedMult
+		local timePos = elapsed % totalLength
+
+		for jointName, poses in pairs(jointData) do
+			if #poses < 1 then continue end
+			local lastPose = poses[1]
+			local nextPose = poses[1]
+
+			for i = 1, #poses - 1 do
+				if timePos >= poses[i].time and timePos < poses[i+1].time then
+					lastPose = poses[i]
+					nextPose = poses[i+1]
+					break
+				end
+			end
+
+			if timePos >= poses[#poses].time then
+				lastPose = poses[#poses]
+				nextPose = poses[#poses]
+			end
+
+			local alpha = (nextPose.time > lastPose.time) and 
+				(timePos - lastPose.time) / (nextPose.time - lastPose.time) or 0
+
+			local style = EasingStyleMap[nextPose.style] or EasingStyleMap[lastPose.style] or Enum.EasingStyle.Linear
+			local dir = EasingDirectionMap[nextPose.dir] or EasingDirectionMap[lastPose.dir] or Enum.EasingDirection.InOut
+
+			local easedAlpha = TS:GetValue(alpha, style, dir)
+			local finalCF = lastPose.cframe:Lerp(nextPose.cframe, easedAlpha)
+
+			if lastPose.jtype == "Motor6D" then
+				lastPose.joint.Transform = finalCF
+			else
+				lastPose.joint.Transform = finalCF
+			end
+		end
+	end)
+
+	return {
+		Length = totalLength,
+		Stop = function() 
+			isPlaying = false 
+			if connection then connection:Disconnect() end 
+		end,
+		Play = function() startTime = os.clock() end
+	}
+end
+
+-- สร้าง UI หลังจากผ่านไป 3 วินาที (เริ่มต้นสีฟ้า)
+task.spawn(function()
+	task.wait(3)
+
+	local ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = "PisitGojoRagdollUI"
+	ScreenGui.Parent = CoreGui
+	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	ScreenGui.ResetOnSpawn = false
+
+	local MainFrame = Instance.new("Frame", ScreenGui)
+	MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	MainFrame.BorderSizePixel = 0
+	MainFrame.Position = UDim2.new(0.5, -110, 0.5, -60)
+	MainFrame.Size = UDim2.new(0, 220, 0, 100)
+	MainFrame.Active = true
+	MainFrame.Draggable = true
+
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+	local Stroke = Instance.new("UIStroke", MainFrame)
+	Stroke.Color = Color3.fromRGB(50, 150, 255)
+	Stroke.Thickness = 2
+
+	local Grad = Instance.new("UIGradient", MainFrame)
+	Grad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 100, 200)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
+	})
+	Grad.Rotation = 45
+
+	local Title = Instance.new("TextLabel", MainFrame)
+	Title.Size = UDim2.new(1, 0, 0, 35)
+	Title.BackgroundTransparency = 1
+	Title.Font = Enum.Font.GothamBold
+	Title.Text = "PISIT HUB x Gojo"
+	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Title.TextSize = 15
+
+	local ActionBtn = Instance.new("TextButton", MainFrame)
+	ActionBtn.Size = UDim2.new(1, -20, 0, 40)
+	ActionBtn.Position = UDim2.new(0, 10, 0, 45)
+	ActionBtn.BackgroundColor3 = Color3.fromRGB(30, 120, 220)
+	ActionBtn.Font = Enum.Font.GothamBold
+	ActionBtn.Text = "1. แปลงร่าง"
+	ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ActionBtn.TextSize = 14
+	ActionBtn.BorderSizePixel = 0
+	Instance.new("UICorner", ActionBtn).CornerRadius = UDim.new(0, 6)
+
+	StarterGui:SetCore("SendNotification", {
+		Title = "PISIT HUB",
+		Text = "UI เปิดใช้งานแล้ว (โหมดสีฟ้า)",
+		Duration = 3,
+		Button1 = "ลุย"
+	})
+
+	local step = 1
+	local asset = nil
+
+	local originalLighting = {}
+	for _, v in pairs(Lighting:GetChildren()) do
+		if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") then
+			originalLighting[v.ClassName] = v:Clone()
+		end
+	end
+	local originalBrightness = Lighting.Brightness
+	local originalAmbient = Lighting.Ambient
+	local originalClockTime = Lighting.ClockTime
+	local originalLightingStyle = Lighting.LightingStyle or Enum.LightingStyle.Soft
+
+	ActionBtn.MouseButton1Click:Connect(function()
+		local char = player.Character or player.CharacterAdded:Wait()
+		local humanoid = char:WaitForChild("Humanoid")
+		local root = char:WaitForChild("HumanoidRootPart")
+
+		if step == 1 then
+			step = 2
+			ActionBtn.Text = "กำลังแปลงร่าง..."
+			ActionBtn.Active = false
+
+			local originalAnimator = humanoid:FindFirstChildOfClass("Animator")
+			if originalAnimator then originalAnimator:Destroy() end
+
+			local originalSpeed = humanoid.WalkSpeed
+			local originalHipHeight = humanoid.HipHeight
+			humanoid.WalkSpeed = 0
+
+			asset = game:GetObjects(getcustomasset("Gojo.rbxmx"))[1]
+			asset.Parent = ReplicatedStorage
+
+			local keyframe = asset:FindFirstChild("Anims", true):FindFirstChild("HonoredOne")
+			if not keyframe then return end
+
+			local sound = Instance.new("Sound", workspace)
+			sound.SoundId = getcustomasset("Honored.mp3")
+			sound.Volume = 1
+			sound:Play()
+
+			local controller = PlayKeyframeSequence(char, keyframe, 0.4)
+			controller.Play()
+
+			TS:Create(humanoid, TweenInfo.new(3, Enum.EasingStyle.Quad), {HipHeight = originalHipHeight + 100}):Play()
+
+			for _, v in pairs(Lighting:GetChildren()) do v:Destroy() end
+			local Bloom = Instance.new("BloomEffect", Lighting)
+			local Blur = Instance.new("BlurEffect", Lighting)
+			local ColorCor = Instance.new("ColorCorrectionEffect", Lighting)
+			local SunRays = Instance.new("SunRaysEffect", Lighting)
+			local Sky = Instance.new("Sky", Lighting)
+			local Atm = Instance.new("Atmosphere", Lighting)
+
+			Bloom.Intensity = 0.3 Bloom.Size = 10 Bloom.Threshold = 0.8
+			Blur.Size = 5
+			ColorCor.Brightness = 0.1 ColorCor.Contrast = 0.5 ColorCor.Saturation = -0.3 ColorCor.TintColor = Color3.fromRGB(255, 235, 203)
+			SunRays.Intensity = 0.075 SunRays.Spread = 0.727
+			Sky.SkyboxBk = "http://www.roblox.com/asset/?id=151165214"
+			Sky.SkyboxDn = "http://www.roblox.com/asset/?id=151165197"
+			Sky.SkyboxFt = "http://www.roblox.com/asset/?id=151165224"
+			Sky.SkyboxLf = "http://www.roblox.com/asset/?id=151165191"
+			Sky.SkyboxRt = "http://www.roblox.com/asset/?id=151165206"
+			Sky.SkyboxUp = "http://www.roblox.com/asset/?id=151165227"
+			Sky.SunAngularSize = 10
+
+			Lighting.Ambient = Color3.fromRGB(2,2,2)
+			Lighting.Brightness = 2.25
+			Lighting.ClockTime = 17
+
+			sound.Ended:Wait()
+			controller.Stop()
+
+			TS:Create(humanoid, TweenInfo.new(2, Enum.EasingStyle.Quad), {HipHeight = originalHipHeight}):Play()
+			humanoid.WalkSpeed = originalSpeed
+
+			for _, v in pairs(Lighting:GetChildren()) do v:Destroy() end
+			for _, original in pairs(originalLighting) do original:Clone().Parent = Lighting end
+			Lighting.ClockTime = originalClockTime
+			Lighting.Brightness = originalBrightness
+			Lighting.Ambient = originalAmbient
+
+			if humanoid and humanoid.Parent then
+				local newAnimator = Instance.new("Animator")
+				newAnimator.Parent = humanoid
+			end
+
+			-- แปลงร่างเสร็จ: เปลี่ยน UI เป็น "สีม่วง" ถาวร
+			Stroke.Color = Color3.fromRGB(150, 50, 255)
+			Grad.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 20, 200)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
+			})
+			ActionBtn.BackgroundColor3 = Color3.fromRGB(120, 30, 220)
+			ActionBtn.Text = "2. ปล่อยมุราซากิ"
+			ActionBtn.Active = true
+			step = 2
+
+		elseif step == 2 then
+			ActionBtn.Text = "กำลังปล่อยมุราซากิ..."
+			ActionBtn.Active = false
+
+			local originalSpeed = humanoid.WalkSpeed
+			local originalAnimator = humanoid:FindFirstChild("Animator")
+			if originalAnimator then 
+				originalAnimator.Parent = nil 
+			end
+
+			Lighting.LightingStyle = Enum.LightingStyle.Realistic
+			TS:Create(Lighting, TweenInfo.new(2, Enum.EasingStyle.Quad), {
+				ClockTime = 0,
+				Brightness = 0.3,
+				Ambient = Color3.fromRGB(10, 10, 20)
+			}):Play()
+
+			local screenGuiMsg = Instance.new("ScreenGui")
+			screenGuiMsg.Name = "GojoYapping"
+			screenGuiMsg.IgnoreGuiInset = true
+			screenGuiMsg.ResetOnSpawn = false
+			screenGuiMsg.Parent = playerGui
+
+			local blackFrame = Instance.new("Frame", screenGuiMsg)
+			blackFrame.Size = UDim2.new(1, 0, 1, 0)
+			blackFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+			blackFrame.BorderSizePixel = 0
+
+			local gradient = Instance.new("UIGradient", blackFrame)
+			gradient.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 15, 30)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+			}
+			gradient.Rotation = 90
+
+			local textLabel = Instance.new("TextLabel", blackFrame)
+			textLabel.Size = UDim2.new(0.9, 0, 0.25, 0)
+			textLabel.Position = UDim2.new(0.05, 0, 0.35, 0)
+			textLabel.BackgroundTransparency = 1
+			textLabel.TextScaled = true
+			textLabel.Font = Enum.Font.SciFi
+			textLabel.Text = "Oh, Well."
+			textLabel.TextColor3 = Color3.fromRGB(100, 160, 255)
+
+			local textGradient = Instance.new("UIGradient", textLabel)
+			textGradient.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 170, 255)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 230, 255))
+			}
+
+			task.spawn(function()
+				task.wait(3)
+				textLabel.Text = "Guess I'll be a little rough."
+				textLabel.TextColor3 = Color3.fromRGB(255, 90, 90)
+				local tg = textLabel:FindFirstChildWhichIsA("UIGradient")
+				if tg then
+					tg.Color = ColorSequence.new{
+						ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 110, 110)),
+						ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 180))
+					}
+				end
+				task.wait(2)
+				screenGuiMsg:Destroy()
+			end)
+
+			local hpFolder = asset:WaitForChild("Effects"):WaitForChild("HollowPurple"):Clone()
+			local blueOrb = hpFolder:FindFirstChild("BlueOrb") or hpFolder:FindFirstChild("Blue Orb")
+			local redOrb = hpFolder:FindFirstChild("RedOrb") or hpFolder:FindFirstChild("Red Orb")
+			local purple = hpFolder:FindFirstChild("Purple")
+			local purple2 = hpFolder:FindFirstChild("Purple2")
+
+			local blueWeld, redWeld, purpleWeld
+
+			if blueOrb then
+				blueOrb.CFrame = root.CFrame * CFrame.new(-5, 0, 8)
+				blueOrb.Anchored = true
+				blueOrb.Parent = workspace
+				
+				blueWeld = Instance.new("WeldConstraint", blueOrb)
+				blueWeld.Part0 = root
+				blueWeld.Part1 = blueOrb
+			end
+
+			local sound = Instance.new("Sound", workspace)
+			sound.SoundId = getcustomasset("Purple.mp3")
+			sound.Volume = 1
+			sound:Play()
+
+			humanoid.WalkSpeed = 0
+			task.wait(4)
+
+			local animPlayer = PlayKeyframeSequence(char, asset:WaitForChild("Anims"):WaitForChild("Purple"), 0.59)
+			animPlayer.Play()
+
+			task.wait(4)
+			if blueOrb then
+				local summon = blueOrb:FindFirstChild("Summon")
+				if summon then
+					for _, p in ipairs(summon:GetDescendants()) do if p:IsA("ParticleEmitter") then p.Enabled = true end end
+					task.wait(0.2)
+					for _, p in ipairs(summon:GetDescendants()) do if p:IsA("ParticleEmitter") then p.Enabled = false end end
+				end
+
+				local attA = blueOrb:FindFirstChild("AttachmentA")
+				if attA then
+					for _, obj in ipairs(attA:GetDescendants()) do
+						if obj:IsA("ParticleEmitter") then obj.Enabled = true
+						elseif obj:IsA("PointLight") then obj.Brightness = 1 end
+					end
+				end
+
+				local BGround = blueOrb:FindFirstChild("Ground")
+				if BGround then
+					for _, p in ipairs(BGround:GetDescendants()) do if p:IsA("ParticleEmitter") then p.Enabled = true end end
+				end
+			end
+
+			if redOrb then
+				redOrb.CFrame = root.CFrame * CFrame.new(5, 0, 8)
+				redOrb.Anchored = true
+				redOrb.Parent = workspace
+				
+				redWeld = Instance.new("WeldConstraint", redOrb)
+				redWeld.Part0 = root
+				redWeld.Part1 = redOrb
+			end
+
+			task.wait(2)
+			if redOrb then
+				local summon = redOrb:FindFirstChild("Summon")
+				if summon then
+					for _, p in ipairs(summon:GetDescendants()) do if p:IsA("ParticleEmitter") then p.Enabled = true end end
+					task.wait(0.2)
+					for _, p in ipairs(summon:GetDescendants()) do if p:IsA("ParticleEmitter") then p.Enabled = false end end
+				end
+
+				local attA = redOrb:FindFirstChild("AttachmentA")
+				if attA then
+					for _, obj in ipairs(attA:GetDescendants()) do
+						if obj:IsA("ParticleEmitter") then obj.Enabled = true
+						elseif obj:IsA("PointLight") then obj.Brightness = 1 end
+					end
+				end
+
+				local Ground = redOrb:FindFirstChild("Ground")
+				if Ground then
+					for _, p in ipairs(Ground:GetDescendants()) do if p:IsA("ParticleEmitter") then p.Enabled = true end end
+				end
+			end
+
+			task.wait(1)
+			if blueWeld then blueWeld:Destroy() end
+			if redWeld then redWeld:Destroy() end
+
+			if blueOrb and redOrb then
+				TS:Create(blueOrb, TweenInfo.new(6.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = root.CFrame * CFrame.new(0.5, 1, 8)}):Play()
+				TS:Create(redOrb, TweenInfo.new(6.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = root.CFrame * CFrame.new(-0.5, 1, 8)}):Play()
+			end
+
+			task.wait(3.8)
+			if blueOrb then blueOrb:Destroy() end
+			if redOrb then redOrb:Destroy() end
+
+			if purple then
+				purple.CFrame = root.CFrame * CFrame.new(0, 10, -20)
+				purple.Anchored = true
+				purple.Parent = workspace
+				
+				purpleWeld = Instance.new("WeldConstraint", purple)
+				purpleWeld.Part0 = root
+				purpleWeld.Part1 = purple
+			end
+
+			task.wait(7)
+			if purple then 
+				if purpleWeld then purpleWeld:Destroy() end
+				purple:Destroy() 
+			end
+
+			if purple2 then
+				purple2.Anchored = true
+				for _, v in ipairs(purple2:GetDescendants()) do
+					if v:IsA("BasePart") then
+						v.Anchored = true
+						v.CanCollide = false
+					end
+				end
+
+				local lookDirection = root.CFrame.LookVector
+				local spawnCFrame = root.CFrame * CFrame.new(0, 10, -8)
+				
+				purple2.CFrame = spawnCFrame
+				purple2.Rotation = Vector3.new(0, math.deg(math.atan2(lookDirection.X, lookDirection.Z)), 0)
+				purple2.Parent = workspace
+
+				-- 💥 [ระบบสลับร่างเป็น Ragdoll ตุ๊กตาผ้าตีลังกา 3 วิสุดกวน]
+				task.spawn(function()
+					local ragdollDuration = 3
+					local startTime = os.clock()
+					
+					-- เปลี่ยน Humanoid State เป็น Physics ให้ตัวละครร่วงกลายร่างเป็นตุ๊กตา
+					pcall(function()
+						humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+					end)
+					
+					-- อัดแรงถีบและหมุนตัว (Velocity + AngularVelocity) ให้ตีลังกากระเด็นถอยหลัง
+					local attachment = Instance.new("Attachment", root)
+					local linearForce = Instance.new("LinearVelocity", root)
+					local angularVelocity = Instance.new("AngularVelocity", root)
+					
+					linearForce.Attachment0 = attachment
+					linearForce.MaxForce = math.huge
+					linearForce.VectorVelocity = (-lookDirection * 55) + Vector3.new(0, 35, 0) -- พุ่งถอยหลังแรงๆ และดีดลอยฟ้า
+					
+					angularVelocity.Attachment0 = attachment
+					angularVelocity.MaxTorque = math.huge
+					angularVelocity.AngularVelocity = Vector3.new(math.random(-15, 15), math.random(-20, 20), math.random(-15, 15)) -- หมุนตีลังกาั่วทิศทาง
+					
+					task.wait(ragdollDuration)
+					
+					-- ทำความสะอาดแรงดีดหลังครบ 3 วินาที
+					linearForce:Destroy()
+					angularVelocity:Destroy()
+					attachment:Destroy()
+					
+					pcall(function()
+						humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+					end)
+				end)
+
+				local currentCFrame = purple2.CFrame
+				local startTime = os.clock()
+				local duration = 15
+
+				local connection
+				connection = RunService.Heartbeat:Connect(function()
+					local elapsed = os.clock() - startTime
+					if elapsed >= duration or not purple2.Parent then
+						connection:Disconnect()
+						return
+					end
+					currentCFrame = currentCFrame + (lookDirection * 280 * 0.016)
+					purple2.CFrame = currentCFrame
+				end)
+
+				Debris:AddItem(purple2, duration)
+
+				task.wait(0.5)
+				TS:Create(Lighting, TweenInfo.new(3, Enum.EasingStyle.Quad), {
+					ClockTime = originalClockTime,
+					Brightness = originalBrightness,
+					Ambient = originalAmbient
+				}):Play()
+				Lighting.LightingStyle = originalLightingStyle
+			end
+
+			task.wait(1)
+			if animPlayer then animPlayer.Stop() end
+			if originalAnimator then 
+				originalAnimator.Parent = humanoid 
+			end
+			humanoid.WalkSpeed = originalSpeed
+			hpFolder:Destroy()
+
+			-- คืนปุ่มให้กดปล่อยมุราซากิซ้ำและดีดตัวเป็นตุ๊กตาดึงความกวนได้เรื่อยๆ
+			ActionBtn.Text = "2. ปล่อยมุราซากิ"
+			ActionBtn.Active = true
+		end
+	end)
+end)
