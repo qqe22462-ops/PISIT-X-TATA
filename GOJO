@@ -21,7 +21,7 @@ writefile("Purple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/
 writefile("UnlimitedPurple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/UnlimitedPurple.mp3"))
 writefile("ImaginaryPurple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/ImaginaryPurple.mp3"))
 writefile("Domain.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Domain.mp3"))
-writefile("Honored.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Honored.mp3"))
+writefile("Honored.mp3", game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/ZXTAta/refs/heads/main/gojo.mp3"))
 
 local Players = game:GetService("Players")
 local TS = game:GetService("TweenService")
