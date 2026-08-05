@@ -1,0 +1,220 @@
+-- ====================================================================
+-- PISIT x TATA | Main Hub UI (Dynamic Map Detector & Script Hub)
+-- ====================================================================
+
+-- โหลด UI หลัก
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT_HUB.bundle.lua"))()
+
+-- ดาวน์โหลดและรันไฟล์เสียง pisit.mp3 ต่อทันทีหลังจาก UI โหลดเสร็จ
+task.spawn(function()
+    pcall(function()
+        local soundFileName = "pisit.mp3"
+        local soundRawLink = "https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/pisit.mp3"
+
+        if not isfile(soundFileName) then
+            writefile(soundFileName, game:HttpGet(soundRawLink))
+        end
+
+        local sound = Instance.new("Sound")
+        sound.SoundId = getcustomasset(soundFileName)
+        sound.Volume = 2
+        sound.Parent = workspace
+        sound:Play()
+
+        task.delay(10, function()
+            if sound then sound:Destroy() end
+        end)
+    end)
+end)
+
+-- ดึงข้อมูลตัวเกมและ PlaceId เพื่อเช็คแมพ
+local MarketplaceService = game:GetService("MarketplaceService")
+local Stats = game:GetService("Stats")
+local success, placeInfo = pcall(function()
+    return MarketplaceService:GetProductInfo(game.PlaceId)
+end)
+
+local mapName = success and placeInfo.Name or "Unknown Map"
+
+-- สร้างหน้าต่างหลักของโปรเจกต์
+local Window = Library:CreateWindow({
+    Title = "PISIT x TATA | Main Hub"
+})
+
+-- สร้าง Tabs
+local PlayerTab = Window:CreateTab({ Title = "Player" })
+local CheatTab = Window:CreateTab({ Title = "ช่วยเล่น" })
+-- สร้าง Tab ใหม่สำหรับเช็คและรันสคริปต์ตามแมพปัจจุบัน
+local MapTab = Window:CreateTab({ Title = "สคริปต์ของแมพ: " .. mapName })
+
+-- สร้าง Sections
+local EspSection = PlayerTab:CreateSection({ Title = "Visuals (ESP)" })
+local OptSection = PlayerTab:CreateSection({ Title = "Optimization & Performance" })
+local CheatSection = CheatTab:CreateSection({ Title = "Script Executor Helper" })
+
+-- Section สำหรับแสดงและรันสคริปต์แยกตามแมพฝั่งซ้าย/ขวาใน UI
+local MapScriptSection = MapTab:CreateSection({ Title = "ระบบตรวจสอบและรันสคริปต์ประจำแมพ" })
+
+-- ====================================================================
+-- PLAYER TAB: ESP ค่าย PISIT หลัก (แบบเดิม)
+-- ====================================================================
+EspSection:CreateToggle({
+    Title = "ESP ค่าย PISIT หลัก",
+    Default = false,
+    Callback = function(state)
+        if state then
+            pcall(function()
+                if getgenv and getgenv().PisitEspCleanup then
+                    getgenv().PisitEspCleanup()
+                end
+            end)
+            
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/ESP.PISIT.HUB"))()
+            end)
+            
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "PISIT HUB",
+                Text = "เปิด ESP ค่าย PISIT สำเร็จ",
+                Duration = 2
+            })
+        else
+            pcall(function()
+                if getgenv and getgenv().PisitEspCleanup then
+                    getgenv().PisitEspCleanup()
+                end
+            end)
+            
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "PISIT HUB",
+                Text = "ปิดและเคลียร์เส้น ESP ทั้งหมดแล้ว",
+                Duration = 2
+            })
+        end
+    end
+})
+
+-- ====================================================================
+-- PLAYER TAB: ปุ่มลดความแลค ค่าย PISIT
+-- ====================================================================
+OptSection:CreateButton({
+    Title = "ลดความแลค ค่าย PISIT",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/FPS.PISIT.HUB"))()
+        end)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "PISIT HUB",
+            Text = "รันสคริปต์ลดความแลคเรียบร้อยแล้ว!",
+            Duration = 2
+        })
+    end
+})
+
+-- ====================================================================
+-- CHEAT TAB: ปุ่มกดรันสคริปต์ช่วยเล่น
+-- ====================================================================
+CheatSection:CreateButton({
+    Title = "ESP อิสระค่าย PISIT",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/ESP.AII.PISIT"))()
+        end)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "PISIT HUB",
+            Text = "เปิดเมนู ESP อิสระค่าย PISIT แล้ว",
+            Duration = 2
+        })
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปผลักคน",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT%20X%20TATA"))()
+        end)
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปบิน",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/fly.lua"))()
+        end)
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปต์หยุดเวลา",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Stop"))()
+        end)
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริป สุคุนะ x PISIT",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Sukuna.x.PISIT"))()
+        end)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "PISIT HUB",
+            Text = "กำลังเปิดใช้งาน สคริป สุคุนะ x PISIT...",
+            Duration = 2
+        })
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริป โกโจ x PISIT",
+    Callback = function()
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/GOJO"))()
+        end)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "PISIT HUB",
+            Text = "กำลังเปิดใช้งาน สคริป โกโจ x PISIT...",
+            Duration = 2
+        })
+    end
+})
+
+-- ====================================================================
+-- MAP TAB: ระบบตรวจสอบแมพและแสดงปุ่มรันสคริปต์เฉพาะแมพ
+-- ====================================================================
+if string.find(string.lower(mapName), "strongest") or game.PlaceId == 10449761463 or game.PlaceId == 2534724415 then
+    MapScriptSection:CreateButton({
+        Title = "⚡ รันสคริปต์แมพ: The Strongest Battlegrounds",
+        Callback = function()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/TSB.PISIT"))()
+            end)
+            
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "PISIT HUB - MAP",
+                Text = "กำลังรันสคริปต์สำหรับ The Strongest Battlegrounds...",
+                Duration = 3
+            })
+        end
+    })
+else
+    MapScriptSection:CreateButton({
+        Title = "📌 แมพปัจจุบัน: " .. mapName .. " (ยังไม่มีสคริปต์เฉพาะแมพนี้)",
+        Callback = function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "PISIT HUB",
+                Text = "แมพนี้ยังไม่มีสคริปต์พิเศษรองรับเพื่อน!",
+                Duration = 2
+            })
+        end
+    })
+end
+
