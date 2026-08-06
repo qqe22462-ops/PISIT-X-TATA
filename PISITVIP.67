@@ -1,55 +1,31 @@
 -- ====================================================================
--- PISIT x TATA | Main Hub UI (Cloudflare Backend Secure Logger)
+-- PISIT x TATA | Main Hub UI (Cloudflare Backend Secure Guard)
 -- ====================================================================
 
 -- โหลด UI หลัก
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT_HUB.bundle.lua"))()
 
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local localPlayer = Players.LocalPlayer
+
+-- ดึงข้อมูลชื่อแมพปัจจุบัน
+local success, placeInfo = pcall(function()
+    return MarketplaceService:GetProductInfo(game.PlaceId)
+end)
+local mapName = success and placeInfo.Name or "Unknown Map"
+
+-- ตัวแปรเก็บจำนวนคนรัน (รับมาจาก Cloudflare หลังบ้าน)
+local totalUniqueUsers = 0
+
 -- ====================================================================
--- ระบบส่งผ่าน Cloudflare Worker + ป้องกันสแปม (Cooldown 10 นาที)
+-- ส่งข้อมูลไปให้ Cloudflare จัดการเรื่อง Cooldown และ Counter 
 -- ====================================================================
 task.spawn(function()
     pcall(function()
-        local HttpService = game:GetService("HttpService")
-        local Players = game:GetService("Players")
-        local localPlayer = Players.LocalPlayer
+        local workerUrl = "https://asasaafafe.qqe22462.workers.dev/"
 
-        -- 🔗 ลิงก์ Cloudflare Worker ของมึง
-        local workerUrl = "https://pisit.qqe22462.workers.dev/"
-
-        -- เช็คระบบ Cooldown กันสแปม 10 นาที (600 วินาที) ต่อ 1 ไอดี
-        local cooldownFile = "PisitHub_SpamGuard.json"
-        local currentTime = os.time()
-        local coolDownTime = 600 -- 10 นาที
-        local spamData = {}
-
-        if isfile(cooldownFile) then
-            local success, decoded = pcall(function()
-                return HttpService:JSONDecode(readfile(cooldownFile))
-            end)
-            if success and type(decoded) == "table" then
-                spamData = decoded
-            end
-        end
-
-        local userIdStr = tostring(localPlayer.UserId)
-        if spamData[userIdStr] and (currentTime - spamData[userIdStr] < coolDownTime) then
-            -- ถ้ายังไม่หมดเวลา 10 นาที ให้ตัดจบการทำงาน ไม่ส่งซ้ำ
-            return
-        end
-
-        -- อัปเดตเวลาล่าสุดที่รัน
-        spamData[userIdStr] = currentTime
-        writefile(cooldownFile, HttpService:JSONEncode(spamData))
-
-        -- ดึงข้อมูลชื่อแมพปัจจุบัน
-        local MarketplaceService = game:GetService("MarketplaceService")
-        local success, placeInfo = pcall(function()
-            return MarketplaceService:GetProductInfo(game.PlaceId)
-        end)
-        local mapName = success and placeInfo.Name or "Unknown Map"
-
-        -- ส่งข้อมูลไปที่ Cloudflare Worker (ซ่อน Webhook ของจริงไว้ปลอดภัย 100%)
         local data = {
             username = localPlayer.Name,
             userId = localPlayer.UserId,
@@ -61,7 +37,7 @@ task.spawn(function()
         local httpRequest = request or http_request or syn and syn.request
         
         if httpRequest then
-            httpRequest({
+            local response = httpRequest({
                 Url = workerUrl,
                 Method = "POST",
                 Headers = {
@@ -69,6 +45,14 @@ task.spawn(function()
                 },
                 Body = encodedData
             })
+
+            -- ถ้าหลังบ้านตอบกลับมาสำเร็จ ให้ดึงยอดคนรันสะสมมาเก็บไว้
+            if response and response.StatusCode == 200 then
+                local decodedRes = HttpService:JSONDecode(response.Body)
+                if decodedRes and decodedRes.totalUniqueUsers then
+                    totalUniqueUsers = decodedRes.totalUniqueUsers
+                end
+            end
         end
     end)
 end)
@@ -93,52 +77,6 @@ task.spawn(function()
             if sound then sound:Destroy() end
         end)
     end)
-end)
-
--- ดึงข้อมูลตัวเกมและ PlaceId เพื่อเช็คแมพ
-local MarketplaceService = game:GetService("MarketplaceService")
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-
-local success, placeInfo = pcall(function()
-    return MarketplaceService:GetProductInfo(game.PlaceId)
-end)
-
-local mapName = success and placeInfo.Name or "Unknown Map"
-
--- ====================================================================
--- ระบบบันทึกและนับจำนวนคนรันที่ไม่ซ้ำกัน (Unique Execution Counter)
--- ====================================================================
-local trackerFileName = "PisitHub_UserTracker.json"
-local totalUniqueUsers = 0
-
-pcall(function()
-    local HttpService = game:GetService("HttpService")
-    local recordedUsers = {}
-
-    if isfile(trackerFileName) then
-        local content = readfile(trackerFileName)
-        local decoded = HttpService:JSONDecode(content)
-        if type(decoded) == "table" then
-            recordedUsers = decoded
-        end
-    end
-
-    local userIdStr = tostring(localPlayer.UserId)
-    local alreadyRecorded = false
-    for _, id in ipairs(recordedUsers) do
-        if id == userIdStr then
-            alreadyRecorded = true
-            break
-        end
-    end
-
-    if not alreadyRecorded then
-        table.insert(recordedUsers, userIdStr)
-        writefile(trackerFileName, HttpService:JSONEncode(recordedUsers))
-    end
-
-    totalUniqueUsers = #recordedUsers
 end)
 
 -- สร้างหน้าต่างหลักของโปรเจกต์
