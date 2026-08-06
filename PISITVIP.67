@@ -20,11 +20,11 @@ local mapName = success and placeInfo.Name or "Unknown Map"
 local totalUniqueUsers = 0
 
 -- ====================================================================
--- ส่งข้อมูลไปให้ Cloudflare จัดการเรื่อง Cooldown และ Counter 
+-- ส่งข้อมูลไปให้ Cloudflare จัดการเรื่อง Cooldown และ Counter (ลิงก์ใหม่)
 -- ====================================================================
 task.spawn(function()
     pcall(function()
-        local workerUrl = "https://asasaafafe.qqe22462.workers.dev/"
+        local workerUrl = "https://pisit-vip.qqe22462.workers.dev/"
 
         local data = {
             username = localPlayer.Name,
@@ -41,7 +41,8 @@ task.spawn(function()
                 Url = workerUrl,
                 Method = "POST",
                 Headers = {
-                    ["Content-Type"] = "application/json"
+                    ["Content-Type"] = "application/json",
+                    ["X-Pisit-Source"] = "PisitSecureHub2026" -- ตัวยืนยันความปลอดภัยให้ Cloudflare Worker ยอมรับ
                 },
                 Body = encodedData
             })
