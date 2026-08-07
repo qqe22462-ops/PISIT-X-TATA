@@ -1,0 +1,43 @@
+-- ====================================================================
+-- PISIT x TATA | Main Hub UI (Strict Security-First Boot & Auto-Load)
+-- ====================================================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- ====================================================================
+-- 1. ระบบตรวจสอบความปลอดภัยขั้นเด็ดขาด (รันเช็คเป็นอันดับแรกสุด)
+-- ====================================================================
+local function instantKickAndStop(reason)
+    pcall(function()
+        -- เตะออกจากเกมทันทีพร้อมแสดงเหตุผล
+        localPlayer:Kick("\n🚫 PISIT HUB SECURITY 🚫\n\nตรวจพบเครื่องมือเจาะระบบหรือ HttpSpy!\nระบบไม่อนุญาตให้ใช้งาน\nเหตุผล: " .. tostring(reason))
+    end)
+    -- หยุดการทำงานของเธรดปัจจุบันทันที ไม่ให้โค้ดข้างล่างรันต่อ
+    task.cancel(coroutine.running())
+end
+
+-- ตรวจสอบการมีอยู่ของ HttpSpy หรือเครื่องมือสปายก่อนรันระบบหลัก
+pcall(function()
+    if CoreGui:FindFirstChild("HttpSpy") or 
+       CoreGui:FindFirstChild("SimpleSpy") or 
+       CoreGui:FindFirstChild("Dex") or 
+       CoreGui:FindFirstChild("Dark Dex") or 
+       CoreGui:FindFirstChild("Hydroxide") or
+       localPlayer.PlayerGui:FindFirstChild("HttpSpy") or 
+       localPlayer.PlayerGui:FindFirstChild("SimpleSpy") then
+        instantKickAndStop("Forbidden Spy Tool Detected on Startup")
+    end
+end)
+
+-- ====================================================================
+-- 2. โหลดสคริปต์หลักทันที (ถ้าผ่านการตรวจสอบความปลอดภัยแล้ว)
+-- ====================================================================
+local success, errorMessage = pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/text.txt.RUOK.txt"))()
+end)
+
+if not success then
+    warn("PISIT HUB: ไม่สามารถโหลดสคริปต์หลักได้ - " .. tostring(errorMessage))
+end
