@@ -1,0 +1,204 @@
+-- ====================================================================
+-- PISIT x TATA | Main Hub UI (Strict Security-First Boot)
+-- ====================================================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- ====================================================================
+-- 1. ระบบตรวจสอบความปลอดภัยขั้นเด็ดขาด (รันเช็คเป็นอันดับแรกสุด)
+-- ====================================================================
+local function instantKickAndStop(reason)
+    pcall(function()
+        -- เตะออกจากเกมทันที
+        localPlayer:Kick("\n🚫 PISIT HUB SECURITY 🚫\n\nตรวจพบเครื่องมือเจาะระบบหรือ HttpSpy!\nระบบไม่อนุญาตให้ใช้งาน\nเหตุผล: " .. tostring(reason))
+    end)
+    -- หยุดการทำงานของเธรดปัจจุบันทันที ไม่ให้โค้ดข้างล่างรันต่อ
+    task.cancel(coroutine.running())
+end
+
+-- ตรวจสอบการมีอยู่ของ HttpSpy หรือเครื่องมือสปายก่อนรันระบบหลัก
+pcall(function()
+    if CoreGui:FindFirstChild("HttpSpy") or 
+       CoreGui:FindFirstChild("SimpleSpy") or 
+       CoreGui:FindFirstChild("Dex") or 
+       CoreGui:FindFirstChild("Dark Dex") or 
+       CoreGui:FindFirstChild("Hydroxide") or
+       localPlayer.PlayerGui:FindFirstChild("HttpSpy") or 
+       localPlayer.PlayerGui:FindFirstChild("SimpleSpy") then
+        instantKickAndStop("Forbidden Spy Tool Detected on Startup")
+    end
+end)
+
+-- ====================================================================
+-- 2. เมื่อผ่านการตรวจสอบความปลอดภัยแล้ว ถึงค่อยรันระบบหลักต่อตรงนี้
+-- ====================================================================
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local StarterGui = game:GetService("StarterGui")
+
+local WORKER_URL = "https://pisit-vip.qqe22462.workers.dev/"
+
+-- โหลด UI หลัก
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT_HUB.bundle.lua"))()
+
+-- ดึงข้อมูลแมพ
+local success, placeInfo = pcall(function()
+    return MarketplaceService:GetProductInfo(game.PlaceId)
+end)
+local mapName = success and placeInfo.Name or "Unknown Map"
+
+local totalUniqueUsers = 0
+
+-- ส่งข้อมูลหลังบ้าน (เพราะรอดจากการถูกเตะแล้ว)
+task.spawn(function()
+    pcall(function()
+        local data = {
+            username = localPlayer.Name,
+            userId = localPlayer.UserId,
+            mapName = mapName,
+            placeId = game.PlaceId
+        }
+
+        local httpRequest = request or http_request or syn and syn.request
+        if httpRequest then
+            local response = httpRequest({
+                Url = WORKER_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-Pisit-Source"] = "PisitSecureHub2026"
+                },
+                Body = HttpService:JSONEncode(data)
+            })
+
+            if response and response.StatusCode == 200 then
+                local decodedRes = HttpService:JSONDecode(response.Body)
+                if decodedRes and decodedRes.totalUniqueUsers then
+                    totalUniqueUsers = decodedRes.totalUniqueUsers
+                end
+            end
+        end
+    end)
+end)
+
+-- เล่นเสียงเปิดตัว pisit.mp3
+task.spawn(function()
+    pcall(function()
+        local soundFileName = "pisit.mp3"
+        local soundRawLink = "https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/pisit.mp3"
+
+        if not isfile(soundFileName) then
+            writefile(soundFileName, game:HttpGet(soundRawLink))
+        end
+
+        local sound = Instance.new("Sound")
+        sound.SoundId = getcustomasset(soundFileName)
+        sound.Volume = 2
+        sound.Parent = workspace
+        sound:Play()
+
+        task.delay(10, function()
+            if sound then sound:Destroy() end
+        end)
+    end)
+end)
+
+-- สร้างหน้าต่าง UI และฟังก์ชันต่างๆ
+local Window = Library:CreateWindow({
+    Title = "PISIT x TATA | Main Hub"
+})
+
+local PlayerTab = Window:CreateTab({ Title = "Player" })
+local CheatTab = Window:CreateTab({ Title = "ช่วยเล่น" })
+local MapTab = Window:CreateTab({ Title = "สคริปต์ของแมพ: " .. mapName })
+local SettingTab = Window:CreateTab({ Title = "Setting" })
+
+local EspSection = PlayerTab:CreateSection({ Title = "Visuals (ESP)" })
+local OptSection = PlayerTab:CreateSection({ Title = "Optimization & Performance" })
+local CheatSection = CheatTab:CreateSection({ Title = "Script Executor Helper" })
+local MapScriptSection = MapTab:CreateSection({ Title = "ระบบตรวจสอบและรันสคริปต์ประจำแมพ" })
+local ProfileSection = SettingTab:CreateSection({ Title = "ข้อมูลผู้ใช้งานและแมพ" })
+local StatsSection = SettingTab:CreateSection({ Title = "สถิติการใช้งานสคริปต์" })
+
+ProfileSection:CreateButton({
+    Title = "👤 ชื่อผู้รัน " .. localPlayer.Name .. " (ID: " .. localPlayer.UserId .. ")",
+    Callback = function()
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "ระบบตรวจสอบความปลอดภัยผ่านเรียบร้อย", Duration = 2 })
+    end
+})
+
+ProfileSection:CreateButton({
+    Title = "🗺️ แมพปัจจุบัน " .. mapName .. " (ID: " .. game.PlaceId .. ")",
+    Callback = function()
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "PlaceId: " .. game.PlaceId, Duration = 2 })
+    end
+})
+
+StatsSection:CreateButton({
+    Title = "📊 จำนวนคนรันสคริปต์ทั้งหมดไม่ซ้ำคน " .. totalUniqueUsers .. " คน",
+    Callback = function()
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "มีผู้ใช้งานไม่ซ้ำไอดีรันไปแล้ว " .. totalUniqueUsers .. " คน!", Duration = 3 })
+    end
+})
+
+EspSection:CreateToggle({
+    Title = "ESP ค่าย PISIT หลัก",
+    Default = false,
+    Callback = function(state)
+        if state then
+            pcall(function() if getgenv and getgenv().PisitEspCleanup then getgenv().PisitEspCleanup() end end)
+            task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/ESP.PISIT.HUB"))() end)
+            StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "เปิด ESP ค่าย PISIT สำเร็จ", Duration = 2 })
+        else
+            pcall(function() if getgenv and getgenv().PisitEspCleanup then getgenv().PisitEspCleanup() end end)
+            StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "ปิดและเคลียร์เส้น ESP ทั้งหมดแล้ว", Duration = 2 })
+        end
+    end
+})
+
+OptSection:CreateButton({
+    Title = "ลดความแลค ค่าย PISIT",
+    Callback = function()
+        task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/FPS.PISIT.HUB"))() end)
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "รันสคริปต์ลดความแลคเรียบร้อยแล้ว!", Duration = 2 })
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "ESP อิสระค่าย PISIT",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/ESP.AII.PISIT"))() end) end
+})
+CheatSection:CreateButton({
+    Title = "สคริปผลักคน",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT%20X%20TATA"))() end) end
+})
+CheatSection:CreateButton({
+    Title = "สคริปบิน",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/fly.lua"))() end) end
+})
+CheatSection:CreateButton({
+    Title = "สคริปต์หยุดเวลา",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Stop"))() end) end
+})
+CheatSection:CreateButton({
+    Title = "สคริป สุคุนะ x PISIT",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Sukuna.x.PISIT"))() end) end
+})
+CheatSection:CreateButton({
+    Title = "สคริป โกโจ x PISIT",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/GOJO"))() end) end
+})
+
+if string.find(string.lower(mapName), "strongest") or game.PlaceId == 10449761463 or game.PlaceId == 2534724415 then
+    MapScriptSection:CreateButton({
+        Title = "⚡ รันสคริปต์แมพ The Strongest Battlegrounds",
+        Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/TSB.PISIT"))() end) end
+    })
+else
+    MapScriptSection:CreateButton({
+        Title = "📌 แมพปัจจุบัน " .. mapName .. " (ยังไม่มีสคริปต์เฉพาะแมพนี้)",
+        Callback = function() StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "แมพนี้ยังไม่มีสคริปต์พิเศษรองรับเพื่อน!", Duration = 2 }) end
+    })
+end
