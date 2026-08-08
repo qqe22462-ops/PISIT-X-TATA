@@ -17,7 +17,7 @@ if not isfile("Gojo.rbxmx") then
 	writefile("Gojo.rbxmx", game:HttpGet("https://github.com/ian49972/RBXMS/raw/refs/heads/main/Gojo.rbxmx"))
 end
 
-writefile("Purple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Purple.mp3"))
+writefile("Purple.mp3", game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/ZXTAta/refs/heads/main/gojomarrsrgi.mp3"))
 writefile("UnlimitedPurple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/UnlimitedPurple.mp3"))
 writefile("ImaginaryPurple.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/ImaginaryPurple.mp3"))
 writefile("Domain.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Domain.mp3"))
