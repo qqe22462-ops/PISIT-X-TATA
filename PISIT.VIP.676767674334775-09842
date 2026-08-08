@@ -1,387 +1,171 @@
 -- ====================================================================
--- PISIT VIP | ULTIMATE SECURITY SHIELD & CINEMATIC LAUNCHER
+-- PISIT x TATA | Main Hub (Original Version)
 -- ====================================================================
 
--- 1. ระบบป้องกันสภาพแวดล้อมและตรวจสอบตัวรันแปลกปลอม (Anti-Sandbox / Anti-Exploit)
-local _ENV = getfenv and getfenv(0) or _ENV
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local StarterGui = game:GetService("StarterGui")
 
-local function __INIT_PROTECTION__()
-    local CONFIG = { MAX_LATENCY = 0.25, MAX_STRIKES = 3 }
-    local _rawget = rawget local _pcall = pcall local _osclock = osclock or os.clock
-    local _tostring = tostring local _error = error local _type = type local _stringfind = string.find
-    local latencyStrikes = 0
-    
-    local function terminateSession(reason)
-        _pcall(function() _error("[Runtime Error] Exception code: 0x" .. _tostring(_osclock() * 1000), 0) end)
-        while true do end
-    end
-    
-    local function checkHooks()
-        local functionsToVerify = { "print", "loadstring", "setmetatable", "pairs", "ipairs" }
-        for i = 1, #functionsToVerify do
-            local funcName = functionsToVerify[i]
-            local func = _rawget(_ENV, funcName)
-            if func then
-                local strRep = _tostring(func)
-                if not _stringfind(strRep, "builtin") and not _stringfind(strRep, "0x") then terminateSession("H-1") end
-                if _type(func) ~= "function" then terminateSession("H-2") end
+local WORKER_URL = "https://pisit-vip.qqe22462.workers.dev/"
+
+-- โหลด UI หลัก
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT_HUB.bundle.lua"))()
+
+-- ดึงข้อมูลแมพ
+local success, placeInfo = pcall(function()
+    return MarketplaceService:GetProductInfo(game.PlaceId)
+end)
+local mapName = success and placeInfo.Name or "Unknown Map"
+local totalUniqueUsers = 0
+
+-- ส่งข้อมูลหลังบ้าน
+task.spawn(function()
+    pcall(function()
+        local data = {
+            username = localPlayer.Name,
+            userId = localPlayer.UserId,
+            mapName = mapName,
+            placeId = game.PlaceId
+        }
+        local response = request({
+            Url = WORKER_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["X-Pisit-Source"] = "PisitSecureHub2026"
+            },
+            Body = HttpService:JSONEncode(data)
+        })
+        if response and response.StatusCode == 200 then
+            local decodedRes = HttpService:JSONDecode(response.Body)
+            if decodedRes and decodedRes.totalUniqueUsers then
+                totalUniqueUsers = decodedRes.totalUniqueUsers
             end
         end
-    end
-    
-    local function verifyTiming(callback)
-        local startTime = _osclock()
-        local success, result = _pcall(callback)
-        local endTime = _osclock()
-        if (endTime - startTime) > CONFIG.MAX_LATENCY then
-            latencyStrikes = latencyStrikes + 1
-            if latencyStrikes >= CONFIG.MAX_STRIKES then terminateSession("D-1") end
-        else latencyStrikes = 0 end
-        if not success then _error(result, 0) end
-        return result
-    end
-    
-    local function protectEnvironment()
-        local meta = getmetatable(_ENV) or {}
-        meta.__newindex = function(t, key, value) terminateSession("T-1") end
-        meta.__metatable = "Locked"
-        setmetatable(_ENV, meta)
-    end
-    
-    _pcall(checkHooks) 
-    _pcall(protectEnvironment)
-    _ENV.__VERIFY_FLOW__ = verifyTiming
-    _ENV.__CHECK_HOOKS__ = checkHooks
-end
-__INIT_PROTECTION__()
+    end)
+end)
 
--- ฟังก์ชันตรวจสอบเครื่องมือหรือสภาพแวดล้อมจำลอง (dtc)[span_1](start_span)[span_1](end_span)
-local function dtc()
-	if _G.lune ~= nil then return true end
-	if _G.lute ~= nil then return true end
-	if _G.wally ~= nil then return true end
-	if _G.rojo ~= nil then return true end
-	if _G.selene ~= nil then return true end
-	if _G.darklua ~= nil then return true end
-	if _G.luau_lsp ~= nil then return true end
-	if _G.remodel ~= nil then return true end
-	if _G.tarmac ~= nil then return true end
-	if _G.stylua ~= nil then return true end
-	if _G.lemur ~= nil then return true end
-	if _G.busted ~= nil then return true end
-	if _G.luaunit ~= nil then return true end
-	if _G.telescope ~= nil then return true end
-	if _G.plugin ~= nil then return true end
-	if _G.fetch ~= nil then return true end
-	if _G.console ~= nil then return true end
-	if _G.setTimeout ~= nil then return true end
-	if _G.setInterval ~= nil then return true end
-	if _G.Buffer ~= nil then return true end
-	if _G.AbortController ~= nil then return true end
-	if _G.AbortSignal ~= nil then return true end
-	if _G.clearInterval ~= nil then return true end
-	if _G.clearTimeout ~= nil then return true end
-	if _G.crypto ~= nil then return true end
-	if _G.performance ~= nil then return true end
-	if _G.global ~= nil then return true end
-	if _G.Headers ~= nil then return true end
-	if _G.Request ~= nil then return true end
-	if _G.Response ~= nil then return true end
-	if _G.TextDecoder ~= nil then return true end
-	if _G.TextEncoder ~= nil then return true end
-	if _G.dofile ~= nil then return true end
-	if _G.loadfile ~= nil then return true end
-	if _G.atob ~= nil then return true end
-	if _G.btoa ~= nil then return true end
-	if _G.self ~= nil then return true end
-	if _G.FormData ~= nil then return true end
-	if _G.Blob ~= nil then return true end
-	if _G.File ~= nil then return true end
-	if _G.URLSearchParams ~= nil then return true end
-	if _G.Event ~= nil then return true end
-	if _G.CustomEvent ~= nil then return true end
-	if _G.structuredClone ~= nil then return true end
-	if _G.__dirname ~= nil then return true end
-	if _G.__filename ~= nil then return true end
-	if _G.process and _G.process.env then return true end
-	if _G.process and _G.process.platform then return true end
-	if _G.require and pcall(function() return _G.require("lune") end) then return true end
-	if _G.require and pcall(function() return _G.require("lute") end) then return true end
-	if _G.alert ~= nil then return true end
-	if _G.confirm ~= nil then return true end
-	if _G.prompt ~= nil then return true end
-	if _G.navigator ~= nil then return true end
-	if _G.location ~= nil then return true end
-	if _G.history ~= nil then return true end
-	if _G.window ~= nil then return true end
-	if _G.document ~= nil then return true end
-	if _G.XMLHttpRequest ~= nil then return true end
-	if _G.WebSocket ~= nil then return true end
-	if _G.EventTarget ~= nil then return true end
-	if _G.MessageChannel ~= nil then return true end
-	if _G.BroadcastChannel ~= nil then return true end
-	if _G.queueMicrotask ~= nil then return true end
-	if _G.reportError ~= nil then return true end
-	if _G.DOMException ~= nil then return true end
-	if _G.requestAnimationFrame ~= nil then return true end
-	if _G.cancelAnimationFrame ~= nil then return true end
-	if _G.matchMedia ~= nil then return true end
-	if _G.postMessage ~= nil then return true end
-	if _G.Worker ~= nil then return true end
-	if _G.SharedWorker ~= nil then return true end
-	if _G.ServiceWorker ~= nil then return true end
-	if _G.IndexedDB ~= nil then return true end
-	if _G.localStorage ~= nil then return true end
-	if _G.sessionStorage ~= nil then return true end
-	if _G.caches ~= nil then return true end
-	if _G.Cache ~= nil then return true end
-	if _G.CacheStorage ~= nil then return true end
-	if _G.globalThis ~= nil then return true end
-	if _G.process and _G.process.argv ~= nil then return true end
-	if _G.process and _G.process.stdout ~= nil then return true end
-	if _G.process and _G.process.stderr ~= nil then return true end
-	if _G.process and _G.process.stdin ~= nil then return true end
-	if _G.process and _G.process.nextTick ~= nil then return true end
-	if _G.process and _G.process.chdir ~= nil then return true end
-	if _G.process and _G.process.cwd ~= nil then return true end
-	if _G.process and _G.process.umask ~= nil then return true end
-	if _G.process and _G.process.uptime ~= nil then return true end
-	if _G.process and _G.process.memoryUsage ~= nil then return true end
-	if _G.process and _G.process.binding ~= nil then return true end
-	if _G.Buffer and _G.Buffer.from ~= nil then return true end
-	if _G.Buffer and _G.Buffer.alloc ~= nil then return true end
-	if _G.URL ~= nil then return true end
-	if _G.URLSearchParams ~= nil then return true end
-	if _G.Blob and _G.Blob.prototype ~= nil then return true end
-	if _G.FileReader ~= nil then return true end
-	if _G.FileList ~= nil then return true end
-	if _G.FileSystem ~= nil then return true end
-	if _G.DirectoryEntry ~= nil then return true end
-	if _G.DOMError ~= nil then return true end
-	if _G.DOMImplementation ~= nil then return true end
-	if _G.DOMTokenList ~= nil then return true end
-	if _G.DocumentFragment ~= nil then return true end
-	if _G.Element ~= nil then return true end
-	if _G.HTMLElement ~= nil then return true end
-	if _G.HTMLDocument ~= nil then return true end
-	if _G.Node ~= nil then return true end
-	if _G.NodeList ~= nil then return true end
-	if _G.Event ~= nil then return true end
-	if _G.CustomEvent ~= nil then return true end
-	if _G.MouseEvent ~= nil then return true end
-	if _G.KeyboardEvent ~= nil then return true end
-	if _G.FocusEvent ~= nil then return true end
-	if _G.UIEvent ~= nil then return true end
-	if _G.WheelEvent ~= nil then return true end
-	if _G.CompositionEvent ~= nil then return true end
-	if _G.DragEvent ~= nil then return true end
-	if _G.ClipboardEvent ~= nil then return true end
-	if _G.PointerEvent ~= nil then return true end
-	if _G.TouchEvent ~= nil then return true end
-	if _G.GamepadEvent ~= nil then return true end
-	if _G.MediaQueryList ~= nil then return true end
-	if _G.MediaQueryListEvent ~= nil then return true end
-	if _G.Screen ~= nil then return true end
-	if _G.History ~= nil then return true end
-	if _G.Location ~= nil then return true end
-	if _G.Navigator ~= nil then return true end
-	if _G.BarProp ~= nil then return true end
-	if _G.External ~= nil then return true end
-	if _G.ApplicationCache ~= nil then return true end
-	if _G.Storage ~= nil then return true end
-	if _G.StorageEvent ~= nil then return true end
-	if _G.WebSocket ~= nil then return true end
-	if _G.CloseEvent ~= nil then return true end
-	if _G.MessageEvent ~= nil then return true end
-	if _G.ErrorEvent ~= nil then return true end
-	if _G.PopStateEvent ~= nil then return true end
-	if _G.HashChangeEvent ~= nil then return true end
-	if _G.PageTransitionEvent ~= nil then return true end
-	if _G.PromiseRejectionEvent ~= nil then return true end
-	if _G.BeforeUnloadEvent ~= nil then return true end
-	if _G.SecurityPolicyViolationEvent ~= nil then return true end
-	if _G.XMLHttpRequestEventTarget ~= nil then return true end
-	if _G.XMLHttpRequestUpload ~= nil then return true end
-	if _G.FormData ~= nil then return true end
-	if _G.Headers ~= nil then return true end
-	if _G.Request ~= nil then return true end
-	if _G.Response ~= nil then return true end
-	if _G.FetchEvent ~= nil then return true end
-	if _G.CacheStorage ~= nil then return true end
-	if _G.Cache ~= nil then return true end
-	if _G.ServiceWorker ~= nil then return true end
-	if _G.ServiceWorkerRegistration ~= nil then return true end
-	if _G.ServiceWorkerGlobalScope ~= nil then return true end
-	if _G.WorkerGlobalScope ~= nil then return true end
-	if _G.DedicatedWorkerGlobalScope ~= nil then return true end
-	if _G.SharedWorkerGlobalScope ~= nil then return true end
-	if _G.Worklet ~= nil then return true end
-	if _G.AudioWorklet ~= nil then return true end
-	if _G.PaintWorklet ~= nil then return true end
-	if _G.LayoutWorklet ~= nil then return true end
-	if _G.AnimationWorklet ~= nil then return true end
-	if _G.CSS ~= nil then return true end
-	if _G.CSSStyleDeclaration ~= nil then return true end
-	if _G.CSSStyleSheet ~= nil then return true end
-	if _G.StyleSheet ~= nil then return true end
-	if _G.StyleSheetList ~= nil then return true end
-	if _G.StyleMedia ~= nil then return true end
-	if _G.MediaList ~= nil then return true end
-	if _G.MediaError ~= nil then return true end
-	if _G.MediaSource ~= nil then return true end
-	if _G.SourceBuffer ~= nil then return true end
-	if _G.SourceBufferList ~= nil then return true end
-	if _G.TextTrack ~= nil then return true end
-	if _G.TextTrackList ~= nil then return true end
-	if _G.TextTrackCue ~= nil then return true end
-	if _G.VTTCue ~= nil then return true end
-	if _G.VTTRegion ~= nil then return true end
-	if _G.CanvasRenderingContext2D ~= nil then return true end
-	if _G.CanvasGradient ~= nil then return true end
-	if _G.CanvasPattern ~= nil then return true end
-	if _G.ImageBitmap ~= nil then return true end
-	if _G.ImageBitmapRenderingContext ~= nil then return true end
-	if _G.OffscreenCanvas ~= nil then return true end
-	if _G.HTMLCanvasElement ~= nil then return true end
-	if _G.HTMLImageElement ~= nil then return true end
-	if _G.HTMLVideoElement ~= nil then return true end
-	if _G.HTMLAudioElement ~= nil then return true end
-	if _G.HTMLMediaElement ~= nil then return true end
-	if _G.HTMLSourceElement ~= nil then return true end
-	if _G.HTMLTrackElement ~= nil then return true end
-	if _G.HTMLFormElement ~= nil then return true end
-	if _G.HTMLInputElement ~= nil then return true end
-	if _G.HTMLButtonElement ~= nil then return true end
-	if _G.HTMLSelectElement ~= nil then return true end
-	if _G.HTMLOptionElement ~= nil then return true end
-	if _G.HTMLTextAreaElement ~= nil then return true end
-	if _G.HTMLLabelElement ~= nil then return true end
-	if _G.HTMLFieldSetElement ~= nil then return true end
-	if _G.HTMLLegendElement ~= nil then return true end
-	if _G.HTMLDataListElement ~= nil then return true end
-	if _G.HTMLOutputElement ~= nil then return true end
-	if _G.HTMLProgressElement ~= nil then return true end
-	if _G.HTMLMeterElement ~= nil then return true end
-	if _G.HTMLDetailsElement ~= nil then return true end
-	if _G.HTMLDialogElement ~= nil then return true end
-	if _G.HTMLMenuElement ~= nil then return true end
-	if _G.HTMLMenuItemElement ~= nil then return true end
-	if _G.HTMLSummaryElement ~= nil then return true end
-	if _G.HTMLDivElement ~= nil then return true end
-	if _G.HTMLSpanElement ~= nil then return true end
-	if _G.HTMLHeadingElement ~= nil then return true end
-	if _G.HTMLParagraphElement ~= nil then return true end
-	if _G.HTMLPreElement ~= nil then return true end
-	if _G.HTMLQuoteElement ~= nil then return true end
-	if _G.HTMLOListElement ~= nil then return true end
-	if _G.HTMLUListElement ~= nil then return true end
-	if _G.HTMLLIElement ~= nil then return true end
-	if _G.HTMLDListElement ~= nil then return true end
-	if _G.HTMLDTElement ~= nil then return true end
-	if _G.HTMLDDElement ~= nil then return true end
-	if _G.HTMLTableElement ~= nil then return true end
-	if _G.HTMLTableCaptionElement ~= nil then return true end
-	if _G.HTMLTableColElement ~= nil then return true end
-	if _G.HTMLTableSectionElement ~= nil then return true end
-	if _G.HTMLTableRowElement ~= nil then return true end
-	if _G.HTMLTableCellElement ~= nil then return true end
-	if _G.HTMLTableDataCellElement ~= nil then return true end
-	if _G.HTMLTableHeaderCellElement ~= nil then return true end
-	if _G.HTMLFrameSetElement ~= nil then return true end
-	if _G.HTMLFrameElement ~= nil then return true end
-	if _G.HTMLIFrameElement ~= nil then return true end
-	if _G.HTMLEmbedElement ~= nil then return true end
-	if _G.HTMLObjectElement ~= nil then return true end
-	if _G.HTMLParamElement ~= nil then return true end
-	if _G.HTMLMapElement ~= nil then return true end
-	if _G.HTMLAreaElement ~= nil then return true end
-	if _G.HTMLScriptElement ~= nil then return true end
-	if _G.HTMLNoScriptElement ~= nil then return true end
-	if _G.HTMLStyleElement ~= nil then return true end
-	if _G.HTMLLinkElement ~= nil then return true end
-	if _G.HTMLBaseElement ~= nil then return true end
-	if _G.HTMLHeadElement ~= nil then return true end
-	if _G.HTMLTitleElement ~= nil then return true end
-	if _G.HTMLMetaElement ~= nil then return true end
-	if _G.HTMLBodyElement ~= nil then return true end
-	if _G.HTMLHtmlElement ~= nil then return true end
-	if _G.HTMLUnknownElement ~= nil then return true end
-	if _G.SVGElement ~= nil then return true end
-	if _G.SVGGraphicsElement ~= nil then return true end
-	if _G.SVGSVGElement ~= nil then return true end
-	if _G.SVGRectElement ~= nil then return true end
-	if _G.SVGCircleElement ~= nil then return true end
-	if _G.SVGEllipseElement ~= nil then return true end
-	if _G.SVGLineElement ~= nil then return true end
-	if _G.SVGPolylineElement ~= nil then return true end
-	if _G.SVGPolygonElement ~= nil then return true end
-	if _G.SVGPathElement ~= nil then return true end
-	if _G.SVGTextElement ~= nil then return true end
-	if _G.SVGTSpanElement ~= nil then return true end
-	if _G.SVGTextPathElement ~= nil then return true end
-	if _G.SVGImageElement ~= nil then return true end
-	if _G.SVGForeignObjectElement ~= nil then return true end
-	if _G.SVGDefsElement ~= nil then return true end
-	if _G.SVGGElement ~= nil then return true end
-	if _G.SVGSymbolElement ~= nil then return true end
-	if _G.SVGUseElement ~= nil then return true end
-	if _G.SVGMarkerElement ~= nil then return true end
-	if _G.SVGClipPathElement ~= nil then return true end
-	if _G.SVGMaskElement ~= nil then return true end
-	if _G.SVGLinearGradientElement ~= nil then return true end
-	if _G.SVGRadialGradientElement ~= nil then return true end
-	if _G.SVGStopElement ~= nil then return true end
-	if _G.SVGPatternElement ~= nil then return true end
-	if _G.SVGScriptElement ~= nil then return true end
-	if _G.SVGStyleElement ~= nil then return true end
-	if _G.SVGAnimateElement ~= nil then return true end
-	if _G.SVGAnimateMotionElement ~= nil then return true end
-	if _G.SVGAnimateTransformElement ~= nil then return true end
-	if _G.SVGSetElement ~= nil then return true end
-	if _G.SVGMetadataElement ~= nil then return true end
-	if _G.SVGViewElement ~= nil then return true end
-	if _G.SVGSwitchElement ~= nil then return true end
-	if _G.SVGDescElement ~= nil then return true end
-	if _G.SVGTitleElement ~= nil then return true end
-	if pcall(function() return require("@lune/fs") end) then return true end
-	if pcall(function() return require("@lune/process") end) then return true end
-	if pcall(function() return require("@lune/net") end) then return true end
-	if pcall(function() return require("@lune/crypto") end) then return true end
-	if pcall(function() return require("@lune/lua") end) then return true end
-	if pcall(function() return require("@lune/task") end) then return true end
-	if pcall(function() return require("@lune/date") end) then return true end
-	if pcall(function() return require("@lune/fs/promises") end) then return true end
-	if pcall(function() return require("@lune/stream") end) then return true end
-	if pcall(function() return require("@lune/url") end) then return true end
-	if pcall(function() return require("@lune/path") end) then return true end
-	if pcall(function() return require("@lune/child_process") end) then return true end
-	if pcall(function() return require("@lune/encoding") end) then return true end
-	if pcall(function() return require("@lune/compression") end) then return true end
-	if pcall(function() return require("@lune/serde") end) then return true end
-	if pcall(function() return require("@lune/base64") end) then return true end
-	if pcall(function() return require("@lune/random") end) then return true end
-	if pcall(function() return require("@lune/utf8") end) then return true end
-	if pcall(function() return require("@lune/hex") end) then return true end
-	if pcall(function() return require("@lune/format") end) then return true end
-	if pcall(function() return require("@lune/fetch") end) then return true end
-	if pcall(function() return require("@lune/timer") end) then return true end
-	if pcall(function() return require("@lune/cli") end) then return true end
-	if pcall(function() return require("@lune/ini") end) then return true end
-	if pcall(function() return require("@lune/toml") end) then return true end
-	if pcall(function() return require("@lune/yaml") end) then return true end
-	if pcall(function() return require("@lune/discord") end) then return true end
-	if pcall(function() return require("@lune/scheduler") end) then return true end
-	if pcall(function() return require("@lune/cors") end) then return true end
-	if pcall(function() return require("@lune/profiler") end) then return true end
-	if pcall(function() return require("@lune/repl") end) then return true end
-	if pcall(function() return require("@lune/terminal") end) then return true end
-	if pcall(function() return require("@lune/roblox") end) then return true end
-	if pcall(function() return require("@lune/assert") end) then return true end
-	if pcall(function() return require("@lune/bench") end) then return true end
-	if pcall(function() return require("@lune/buffer") end) then return true end
-	if pcall(function() return require("@lune/cache") end) then return true end
-	if pcall(function() return require("@lune/clipboard") end) then return true end
-	if pcall(function() return require("@lune/color") end) then return true end
-	if pcall(function() return require("@lune/config") end) then return true end
-	if pcall(function() return require("@lune/datastore") end) then return true end
-	if pcall(function() return require("@lune/diff") end) then 
+-- เล่นเสียงเปิดตัว pisit.mp3
+task.spawn(function()
+    pcall(function()
+        local soundFileName = "pisit.mp3"
+        local soundRawLink = "https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/pisit.mp3"
+        if not isfile(soundFileName) then
+            writefile(soundFileName, game:HttpGet(soundRawLink))
+        end
+        local sound = Instance.new("Sound")
+        sound.SoundId = getcustomasset(soundFileName)
+        sound.Volume = 2
+        sound.Parent = workspace
+        sound:Play()
+        task.delay(10, function()
+            if sound then sound:Destroy() end
+        end)
+    end)
+end)
+
+-- สร้างหน้าต่าง UI และเมนูหลัก
+local Window = Library:CreateWindow({
+    Title = "PISIT x TATA | Main Hub"
+})
+
+local PlayerTab = Window:CreateTab({ Title = "Player" })
+local CheatTab = Window:CreateTab({ Title = "ช่วยเล่น" })
+local MapTab = Window:CreateTab({ Title = "สคริปต์ของแมพ: " .. mapName })
+local SettingTab = Window:CreateTab({ Title = "Setting" })
+
+local EspSection = PlayerTab:CreateSection({ Title = "Visuals (ESP)" })
+local OptSection = PlayerTab:CreateSection({ Title = "Optimization & Performance" })
+local CheatSection = CheatTab:CreateSection({ Title = "Script Executor Helper" })
+local MapScriptSection = MapTab:CreateSection({ Title = "ระบบตรวจสอบและรันสคริปต์ประจำแมพ" })
+local ProfileSection = SettingTab:CreateSection({ Title = "ข้อมูลผู้ใช้งานและแมพ" })
+local StatsSection = SettingTab:CreateSection({ Title = "สถิติการใช้งานสคริปต์" })
+
+ProfileSection:CreateButton({
+    Title = "👤 ชื่อผู้รัน " .. localPlayer.Name .. " (ID: " .. localPlayer.UserId .. ")",
+    Callback = function()
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "ยินดีต้อนรับเพื่อน!", Duration = 2 })
+    end
+})
+
+ProfileSection:CreateButton({
+    Title = "🗺️ แมพปัจจุบัน " .. mapName .. " (ID: " .. game.PlaceId .. ")",
+    Callback = function()
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "PlaceId: " .. game.PlaceId, Duration = 2 })
+    end
+})
+
+StatsSection:CreateButton({
+    Title = "📊 จำนวนคนรันสคริปต์ทั้งหมดไม่ซ้ำคน " .. totalUniqueUsers .. " คน",
+    Callback = function()
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "มีผู้ใช้งานไม่ซ้ำไอดีรันไปแล้ว " .. totalUniqueUsers .. " คน!", Duration = 3 })
+    end
+})
+
+EspSection:CreateToggle({
+    Title = "ESP ค่าย PISIT หลัก",
+    Default = false,
+    Callback = function(state)
+        if state then
+            pcall(function() if getgenv and getgenv().PisitEspCleanup then getgenv().PisitEspCleanup() end end)
+            task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/ESP.PISIT.HUB"))() end)
+            StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "เปิด ESP ค่าย PISIT สำเร็จ", Duration = 2 })
+        else
+            pcall(function() if getgenv and getgenv().PisitEspCleanup then getgenv().PisitEspCleanup() end end)
+            StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "ปิดและเคลียร์เส้น ESP ทั้งหมดแล้ว", Duration = 2 })
+        end
+    end
+})
+
+OptSection:CreateButton({
+    Title = "ลดความแลค ค่าย PISIT",
+    Callback = function()
+        task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/FPS.PISIT.HUB"))() end)
+        StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "รันสคริปต์ลดความแลคเรียบร้อยแล้ว!", Duration = 2 })
+    end
+})
+
+CheatSection:CreateButton({
+    Title = "ESP อิสระค่าย PISIT",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/ESP.AII.PISIT"))() end) end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปผลักคน",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/PISIT%20X%20TATA"))() end) end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปบิน",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/fly.lua"))() end) end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริปต์หยุดเวลา",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Stop"))() end) end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริป สุคุนะ x PISIT",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/Sukuna.x.PISIT"))() end) end
+})
+
+CheatSection:CreateButton({
+    Title = "สคริป โกโจ x PISIT",
+    Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/GOJO"))() end) end
+})
+
+if string.find(string.lower(mapName), "strongest") or game.PlaceId == 10449761463 or game.PlaceId == 2534724415 then
+    MapScriptSection:CreateButton({
+        Title = "⚡ รันสคริปต์แมพ The Strongest Battlegrounds",
+        Callback = function() task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqe22462-ops/PISIT-X-TATA/refs/heads/main/TSB.PISIT"))() end) end
+    })
+else
+    MapScriptSection:CreateButton({
+        Title = "📌 แมพปัจจุบัน " .. mapName .. " (ยังไม่มีสคริปต์เฉพาะแมพนี้)",
+        Callback = function() StarterGui:SetCore("SendNotification", { Title = "PISIT HUB", Text = "แมพนี้ยังไม่มีสคริปต์พิเศษรองรับเพื่อน!", Duration = 2 }) end
+    })
+end
